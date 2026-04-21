@@ -10,7 +10,7 @@ const app = express()
 // Home route - HTML
 app.get('/', (req, res) => {
   res.type('html').send(`
-    <!doctype html>
+    <!doctype htmdwadal>
     <html>
       <head>
         <meta charset="utf-8"/>
