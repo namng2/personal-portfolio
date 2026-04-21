@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Name — Software Engineer</title>
+  <meta name="description" content="Portfolio of Your Name, software engineer." />
+  <link rel="stylesheet" href="styles.css?v=2" />
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <div id="cursor" aria-hidden="true"></div>
+  <div id="cursor-ring" aria-hidden="true"></div>
+  <div id="progress" aria-hidden="true"></div>
+
+  <main>
+    <header class="hero" data-reveal>
+      <p class="eyebrow">// portfolio</p>
+      <h1>
+        <span class="line">Hi, I'm <span class="name">Your Name</span>.</span>
+        <span class="line">I build <span id="rotator" class="rotator">reliable software</span>.</span>
+      </h1>
+      <p class="lede">
+        Software engineer. Curious about systems, obsessed with good interfaces,
+        and occasionally dangerous with a compiler.
+      </p>
+      <nav class="links" aria-label="Primary">
+        <a href="#projects" class="btn">Projects</a>
+        <a href="#" class="btn" data-open-resume>View Resume</a>
+        <a href="mailto:you@example.com" class="btn ghost">Email</a>
+        <a href="https://github.com/your-handle" class="btn ghost" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <section id="skills" data-reveal>
+      <h2>Skills</h2>
+      <div class="chips">
+        <span class="chip">TypeScript</span>
+        <span class="chip">Python</span>
+        <span class="chip">Go</span>
+        <span class="chip">SQL</span>
+        <span class="chip">Node.js</span>
+        <span class="chip">React</span>
+        <span class="chip">Next.js</span>
+        <span class="chip">FastAPI</span>
+        <span class="chip">PostgreSQL</span>
+        <span class="chip">Redis</span>
+        <span class="chip">Docker</span>
+        <span class="chip">AWS</span>
+        <span class="chip">Terraform</span>
+        <span class="chip">Linux</span>
+        <span class="chip">GitHub Actions</span>
+        <span class="chip">Testing</span>
+      </div>
+    </section>
+
+    <section id="projects" data-reveal>
+      <h2>Projects</h2>
+      <div class="grid">
+        <a class="card" data-tilt href="https://github.com/your-handle/project-one" target="_blank" rel="noopener">
+          <div class="card-inner">
+            <p class="num">01</p>
+            <h3>Project One</h3>
+            <p>One-line description of what it does and the problem it solves.</p>
+            <p class="meta">TypeScript · Postgres</p>
+          </div>
+        </a>
+        <a class="card" data-tilt href="https://github.com/your-handle/project-two" target="_blank" rel="noopener">
+          <div class="card-inner">
+            <p class="num">02</p>
+            <h3>Project Two</h3>
+            <p>One-line description. What was hard, what you learned.</p>
+            <p class="meta">Python · FastAPI</p>
+          </div>
+        </a>
+        <a class="card" data-tilt href="https://github.com/your-handle/project-three" target="_blank" rel="noopener">
+          <div class="card-inner">
+            <p class="num">03</p>
+            <h3>Project Three</h3>
+            <p>One-line description. Impact or scale if relevant.</p>
+            <p class="meta">Go · gRPC</p>
+          </div>
+        </a>
+        <a class="card" data-tilt href="https://github.com/your-handle" target="_blank" rel="noopener">
+          <div class="card-inner">
+            <p class="num">→</p>
+            <h3>More on GitHub</h3>
+            <p>Browse the rest of what I've been building.</p>
+            <p class="meta">github.com/your-handle</p>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section id="find-me" data-reveal>
+      <h2>Find me</h2>
+      <ul class="find">
+        <li><a href="https://github.com/your-handle" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://www.linkedin.com/in/your-handle" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="https://twitter.com/your-handle" target="_blank" rel="noopener">Twitter / X</a></li>
+        <li><a href="https://dev.to/your-handle" target="_blank" rel="noopener">DEV</a></li>
+        <li><a href="mailto:you@example.com">Email</a></li>
+      </ul>
+    </section>
+
+    <footer data-reveal>
+      <p>&copy; <span id="year"></span> Your Name · Built with too much coffee.</p>
+    </footer>
+  </main>
+
+  <!-- Resume modal -->
+  <div id="resume-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="resume-title">
+    <div class="modal-backdrop" data-close-resume></div>
+    <div class="modal-box" role="document">
+      <header class="modal-head">
+        <h3 id="resume-title">Resume</h3>
+        <div class="modal-actions">
+          <button type="button" class="btn small ghost" data-print-resume>Print / Save PDF</button>
+          <a href="resume.tex" download class="btn small ghost">Download .tex</a>
+          <button type="button" class="btn small ghost" data-close-resume aria-label="Close">Close ✕</button>
+        </div>
+      </header>
+      <div class="modal-body">
+        <article id="resume-render" class="resume" aria-live="polite"></article>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="script.js"></script>
+  <script src="resume.js?v=2"></script>
+</body>
+</html>

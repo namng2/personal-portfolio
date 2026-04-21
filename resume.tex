@@ -1,0 +1,198 @@
+\documentclass[letterpaper,11pt]{article}
+\usepackage{lmodern}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\input{glyphtounicode}
+
+
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+\setlength{\footskip}{5pt}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\raggedright\large\bfseries
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-1pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hypersetup{
+    pdfauthor={},
+    pdftitle={},
+    pdfsubject={},
+    pdfkeywords={},
+    pdfcreator={},
+    pdfproducer={}
+}
+\pdfinfoomitdate=1
+\pdftrailerid{}
+\pdfsuppressptexinfo=1
+
+
+
+\begin{document}
+
+
+\begin{center}
+    \textbf{\Huge Nam Nguyen} \\ \vspace{1pt}
+    \small 415-988-1531 $|$ \href{mailto:namhnguyen17@gmail.com}{\underline{namhnguyen17@gmail.com}} $|$ 
+    \href{https://linkedin.com/in/namhnguyen17}{\underline{linkedin.com/in/namnguyenh1/}} $|$
+\end{center}
+
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {San Jose State University}{San Jose, CA}
+      {Bachelor of Science in Software Engineering}{August 2024 -- May 2026}
+      \resumeItem{\textbf{Relevant Coursework:} Data Structures \& Algorithms, Databases, Operating Systems, Computer Networks}
+
+  \resumeSubHeadingListEnd
+
+%-----------Relavant Experience-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Mathematics/English Tutor}{September 2024 -- Present}
+      {Tutor Me Education}{San Jose, CA}
+      \resumeItemListStart
+        \resumeItem{Managed 50+ students tracking performance data and adapting strategies, raising grades by one letter on average}
+        \resumeItem{Collaborated with teachers weekly to align tutoring plans with curriculum goals and ensure classroom continuity}
+        \resumeItem{Delivered weekly progress reports of student, enabling educators to refine lesson planning and improve outcomes}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {IoT Cyber Defense Extern}{February 2026 -- Present}
+      {Hydroficient}{}
+      \resumeItemListStart
+        \resumeItem{Designed and secured a Message Queuing Telemetry Transport (MQTT)-based IoT pipeline using Python, TLS encryption, and device certificates to simulate real-time water monitoring systems}
+        \resumeItem{Performed security testing (replay-attack simulations, TLS benchmarking) and built a real-time dashboard to monitor pipeline health, visualize security event logs, and surface threat/alerts across connected devices}
+      \resumeItemListEnd
+
+    \resumeSubheading
+      {Student Consultant Intern, Finance}{February 2023 -- April 2023}
+      {Open Avenues Career Pathways}{}
+      \resumeItemListStart
+        \resumeItem{Built a driver-based 5-year financial forecasting model for SodaStream in Excel, consolidating 3 years of historical data and annual reports to identify trends in revenue growth, cost structure, margin compression, and risk vectors}
+        \resumeItem{Presented findings through data-driven visual narratives and executive summaries, translating complex financial metrics into clear strategic recommendations that informed go-forward investment planning}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+  
+
+%-----------PROJECTS-----------
+
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{RoboMallet — Autonomous Air-Hockey Table} $|$ \emph{OpenCV,Fusion 360, RTOS}}{August 2025 -- Present}
+            \resumeItemListStart
+                \resumeItem{Built an autonomous air-hockey robot end-to-end X–Y gantry, FreeRTOS firmware on an ARM MCU, and a Linux computer vision perception stack on an NVIDIA Apalis, covering mechanical design, embedded firmware}
+                \resumeItem{Architected a Python/OpenCV + C++ two-container pipeline over POSIX shared memory, achieving sub-millisecond IPC latency across 3 concurrent processes for perception, AI inference, and motion control}
+                \resumeItem{Trained a YOLOv8 machine learning model on 1,000+ auto-labeled frames and fused detections into a Kalman filter with trajectory prediction, cutting detection-to-actuation latency $\sim$30\% over the HSV color-threshold}
+            \resumeItemListEnd
+
+      \resumeProjectHeading
+          {\textbf{SpartanUp — SJSU Marketplace} $|$ \emph{Python, JavaScript, Google Cloud, Postman}}{May 2025 -- August 2025}
+          \resumeItemListStart
+            \resumeItem{Built a full-stack marketplace with 15+ REST endpoints using Next.js (UI) and FastAPI (backend), secured with Google OAuth 2.0, and backed by MongoDB with indexing and aggregation pipelines for dynamic feeds}
+            \resumeItem{Prototyped high-fidelity Figma mockups and implemented a responsive, component-driven React UI}
+            \resumeItem{Deployed a CI-friendly full-stack app on Vercel and validated releases with automated Postman tests, achieving 90\%+ endpoint coverage}
+          \resumeItemListEnd
+
+          
+      \resumeProjectHeading
+          {\textbf{Byte2Bite — Restaurant Management System} $|$ \emph{Java, JSP, SQL}}{January 2025 -- May 2025}
+          \resumeItemListStart
+          
+            \resumeItem{Implemented a 3-tier architecture (Presentation, Business Logic, and Data) supports scalability, maintainability}
+            
+            \resumeItem{Deployed full-scale system to Apache Tomcat, integrating Maven for robust dependency management and automated builds to ensure durability, flexibility, and establish smoother CI/CD pipelines and release workflows}
+            
+            \resumeItem{Contributed $\sim$5{,}000 lines of Java/JSP/SQL in a four-week sprint, shipping core features and tests across the stack}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+
+  
+%-----------PROGRAMMING SKILLS-----------
+\section{Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Programming Languages}{: Java, Python, C++, SQL (MySQL), JavaScript/TypeScript, HTML/CSS} \\
+     \textbf{Frameworks/Tools}{: React, FastAPI, JSP/Servlets, Maven, Apache Tomcat, Figma, Fusion 360} \\
+     \textbf{Cloud/DevOps}{: Docker, Git/GitHub, Jenkins, Vercel, Jira, AWS} \\
+     \textbf{Libraries}{: pandas, NumPy, Selenium, OpenCV, PyTorch}
+    }}
+ \end{itemize}
+
+ 
+%-------------------------------------------
+\end{document}
