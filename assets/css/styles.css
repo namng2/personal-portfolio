@@ -33,10 +33,9 @@
   --mb-fg: rgba(255, 255, 255, 0.92);
   --mb-dim: rgba(255, 255, 255, 0.45);
 
-  /* Desktop wallpaper. Drop an image in assets/img/ and point this at it:
-     --wallpaper: url("../img/wallpaper.jpg");
-     The tint sits over the photo so the glass chrome stays readable. */
-  --wallpaper: none;
+  /* Desktop wallpaper. Swap the file in assets/img/ or set this to none.
+     The tint below sits over the photo so the glass chrome stays readable. */
+  --wallpaper: url("../img/wallpaper.jpg");
   --wallpaper-tint: rgba(10, 10, 10, 0.55);
 }
 
@@ -77,6 +76,7 @@ body {
     radial-gradient(55rem 28rem at 95% 12%, rgba(240, 171, 252, 0.06), transparent 60%),
     linear-gradient(var(--wallpaper-tint), var(--wallpaper-tint)),
     var(--wallpaper);
+    
   background-size: auto, auto, auto, cover;
   background-position: center, center, center, center;
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
