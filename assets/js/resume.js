@@ -9,18 +9,20 @@
   const body = document.getElementById("resume-render");
   const openers = document.querySelectorAll("[data-open-resume]");
   const closers = document.querySelectorAll("[data-close-resume]");
+  const printers = document.querySelectorAll("[data-print-resume]");
   if (!modal || !body) return;
 
-  let loaded = false;
+  // Kept as a promise rather than a boolean so printing can await the same
+  // fetch the modal started, instead of racing it and printing a blank page.
+  let loadPromise = null;
 
   function openModal(e) {
     if (e) e.preventDefault();
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
-    if (!loaded) {
-      loaded = true;
-      load();
+    if (!loadPromise) {
+      loadPromise = load();
     } else {
       animateIn();
     }
@@ -93,8 +95,20 @@
     t._timer = setTimeout(() => t.classList.remove("show"), 1600);
   }
 
+  // The print stylesheet hides everything except the resume modal, so printing
+  // while it is closed (or still loading) yields a blank sheet. Open it first,
+  // wait for the parse, then hand off to the browser's print dialog.
+  async function printResume(e) {
+    if (e) e.preventDefault();
+    if (!modal.classList.contains("open")) openModal();
+    await loadPromise;
+    window.print();
+  }
+  window.__printResume = printResume;
+
   openers.forEach((b) => b.addEventListener("click", openModal));
   closers.forEach((b) => b.addEventListener("click", closeModal));
+  printers.forEach((b) => b.addEventListener("click", printResume));
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
   });

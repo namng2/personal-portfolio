@@ -8,10 +8,25 @@ document.getElementById("year").textContent = new Date().getFullYear();
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
+// Canvas can't read CSS custom properties, so mirror the active palette's text
+// colour into an "r, g, b" string. --seed-fg is always a plain hex (the derived
+// tokens are color-mix() and would need resolving), and theme.js fires
+// "themechange" whenever the palette or mode moves.
+let particleRGB = "245, 245, 245";
+function refreshParticleColor() {
+  const hex = getComputedStyle(document.documentElement)
+    .getPropertyValue("--seed-fg")
+    .trim();
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return; // keep the last good value rather than drawing nothing
+  const n = parseInt(m[1], 16);
+  particleRGB = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
+refreshParticleColor();
+window.addEventListener("themechange", refreshParticleColor);
+
 function particleColor(alpha) {
-  return document.documentElement.dataset.theme === "light"
-    ? `rgba(0, 0, 0, ${alpha})`
-    : `rgba(245, 245, 245, ${alpha})`;
+  return `rgba(${particleRGB}, ${alpha})`;
 }
 
 // --------------------------------------------------------------------------
@@ -601,38 +616,8 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
 
 // Resume modal is wired up in resume.js.
 
-// --------------------------------------------------------------------------
-// Theme toggle (dark / light)
-// --------------------------------------------------------------------------
-(function themeToggle() {
-  const btn = document.getElementById("theme-toggle");
-  if (!btn) return;
-  const root = document.documentElement;
-
-  function applyTheme(theme) {
-    if (theme === "light") {
-      root.dataset.theme = "light";
-      btn.textContent = "🌙";
-      btn.title = "Switch to dark mode";
-    } else {
-      delete root.dataset.theme;
-      btn.textContent = "☀️";
-      btn.title = "Switch to light mode";
-    }
-    localStorage.setItem("theme", theme);
-  }
-
-  const saved = localStorage.getItem("theme");
-  applyTheme(saved === "light" ? "light" : "dark");
-
-  btn.addEventListener("click", () => {
-    applyTheme(root.dataset.theme === "light" ? "dark" : "light");
-  });
-
-  // Menu bar drives the theme through these instead of faking button clicks
-  window.__setTheme = applyTheme;
-  window.__getTheme = () => (root.dataset.theme === "light" ? "light" : "dark");
-})();
+// Appearance and colour themes are owned by theme.js, which loads first and
+// exposes __setTheme / __getTheme / __setPalette for the menu bar below.
 
 // --------------------------------------------------------------------------
 // macOS menu bar — live clock, battery, and dropdown menus
@@ -699,8 +684,11 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
   const themeIs = (t) => () => window.__getTheme?.() === t;
 
   const appearanceItems = [
+    { label: "Auto", check: themeIs("auto"), run: () => setTheme("auto") },
     { label: "Light", check: themeIs("light"), run: () => setTheme("light") },
     { label: "Dark", check: themeIs("dark"), run: () => setTheme("dark") },
+    { sep: true },
+    { label: "Theme…", run: () => window.__openThemeSettings?.() },
   ];
 
   const MENUS = {
@@ -727,8 +715,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       { label: "New Tab", key: "⌘T", run: () => go("home") },
       { label: "Open Resume…", key: "⌘O", run: () => click("[data-open-resume]") },
       { sep: true },
-      { label: "Download PDF", run: () => click('a[href$="resume.pdf"]') },
-      { label: "Print…", key: "⌘P", run: () => window.print() },
+      { label: "Print Resume…", key: "⌘P", run: () => window.__printResume?.() },
     ],
     edit: [
       { label: "Undo", key: "⌘Z", disabled: true },
@@ -860,10 +847,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
   window.addEventListener("resize", close);
 
   // ---- Right-side shortcuts ----
-  document.getElementById("mb-control")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    click("#theme-toggle");
-  });
+  // #mb-control opens the appearance popover; theme.js binds that one.
   document.getElementById("mb-search")?.addEventListener("click", (e) => {
     e.stopPropagation();
     go("home");

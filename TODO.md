@@ -48,4 +48,5 @@ Menu bar, wallpaper, window centring/resizing, slim scrollbars, resume content
 update, resume layout fixes, GitHub Pages deploy, security hardening (SRI, CSP,
 `noopener`, URL allowlist), Safari lookbehind fix, SVG charging-bolt fix,
 swapped the `.tex` download + print button for a PDF download, dropped the
-phone number and citizenship line from the resume.
+phone number and citizenship line from the resume, resume indent hierarchy,
+9-palette theme system with Auto/Light/Dark and a Control Centre popover.

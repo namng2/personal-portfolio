@@ -11,8 +11,8 @@
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self' https://cdnjs.cloudflare.com;
-    style-src 'self' 'unsafe-inline';
-    img-src 'self' data:;
+    style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+    img-src 'self' data: blob: https://services.arcgisonline.com;
     font-src 'self';
     connect-src 'self';
     base-uri 'none';
@@ -20,7 +20,16 @@
     object-src 'none'" />
   <title>Nam Nguyen — Software Engineer</title>
   <meta name="description" content="Portfolio of Nam Nguyen, software engineer." />
-  <link rel="stylesheet" href="assets/css/styles.css?v=5" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+        integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="assets/css/themes.css?v=4" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=9" />
+  <!-- Render-blocking on purpose: stamps the saved theme onto <html> before
+       first paint, so the page never flashes the default palette first. It
+       has to be a file, not inline, because the CSP above forbids inline
+       scripts. Keep it tiny. -->
+  <script src="assets/js/boot-theme.js?v=2"></script>
 </head>
 <body>
   <!-- macOS-style menu bar -->
@@ -74,7 +83,9 @@
         </svg>
       </button>
 
-      <button class="mb-status mb-btn" id="mb-control" title="Toggle theme" aria-label="Toggle theme">
+      <button class="mb-status mb-btn" id="mb-control" title="Appearance settings"
+              aria-label="Appearance settings" aria-haspopup="dialog"
+              aria-expanded="false" aria-controls="theme-panel">
         <svg class="mb-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
           <path d="M2 4.5h5M11 4.5h3M2 11.5h3M9 11.5h5"
                 fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -118,6 +129,9 @@
         <button class="tab" role="tab" data-tab="projects" aria-selected="false">
           <span class="tab-icon">🚀</span><span class="tab-label">Projects</span>
         </button>
+        <button class="tab" role="tab" data-tab="map" aria-selected="false">
+          <span class="tab-icon">🗺️</span><span class="tab-label">Map</span>
+        </button>
         <button class="tab" role="tab" data-tab="contact" aria-selected="false">
           <span class="tab-icon">📬</span><span class="tab-label">Contact</span>
         </button>
@@ -157,11 +171,10 @@
             <span class="brand-letter" style="--c:var(--accent-1)">N</span><span
                   class="brand-letter" style="--c:var(--accent-2)">a</span><span
                   class="brand-letter" style="--c:var(--accent-3)">m</span><span
-                  class="brand-letter" style="--c:var(--accent-1)">e</span><span
-                  class="brand-letter" style="--c:var(--accent-2)">.</span><span
-                  class="brand-letter" style="--c:var(--accent-3)">d</span><span
-                  class="brand-letter" style="--c:var(--accent-1)">e</span><span
-                  class="brand-letter" style="--c:var(--accent-2)">v</span>
+                  class="brand-letter" style="--c:var(--accent-1)">.</span><span
+                  class="brand-letter" style="--c:var(--accent-2)">d</span><span
+                  class="brand-letter" style="--c:var(--accent-3)">e</span><span
+                  class="brand-letter" style="--c:var(--accent-1)">v</span>
           </h1>
           <p class="search-tagline">
             I build <span id="rotator" class="rotator">reliable software</span>
@@ -230,8 +243,8 @@
           <nav class="links" aria-label="Primary">
             <button class="btn" data-goto="projects">Projects</button>
             <button class="btn" data-open-resume>View Resume</button>
-            <a href="mailto:you@example.com" class="btn ghost">Email</a>
-            <a href="https://github.com/your-handle" class="btn ghost" target="_blank" rel="noopener">GitHub</a>
+            <a href="mailto:namhnguyen041@gmail.com" class="btn ghost">Email</a>
+            <a href="https://github.com/namng2" class="btn ghost" target="_blank" rel="noopener">GitHub</a>
           </nav>
         </header>
       </section>
@@ -298,6 +311,57 @@
         </div>
       </section>
 
+      <!-- PHOTO MAP -->
+      <section class="panel" data-panel="map">
+        <h2>Photo Map</h2>
+        <p class="lede">Places I have pointed a camera at. Pick a thumbnail to see the shot.</p>
+
+        <div class="pm-stage">
+          <div id="photo-map" class="pm-map" role="application" aria-label="Map of photo locations"></div>
+          <p id="pm-empty" class="pm-empty" hidden>
+            No photos on the map yet — use <strong>Add a photo</strong> to place your first one.
+          </p>
+        </div>
+
+        <div class="pm-bar">
+          <span id="pm-count" class="pm-count"></span>
+          <button type="button" class="btn ghost small" id="pm-add">Add a photo…</button>
+        </div>
+
+        <!-- Authoring helper. The site is static, so this does not upload:
+             it works out the entry for assets/data/photos.json and hands it
+             over to paste in alongside the image file. -->
+        <div id="pm-composer" class="pm-composer" hidden>
+          <h3 class="pm-composer-title">Add a photo</h3>
+          <ol class="pm-steps">
+            <li>
+              <label class="pm-file">
+                <input type="file" id="pm-file" accept="image/jpeg,image/png,image/webp" />
+                <span>Choose an image</span>
+              </label>
+              <span id="pm-file-note" class="pm-note"></span>
+            </li>
+            <li>Click the map to set where it was taken (auto-filled if the photo has GPS).</li>
+            <li>
+              <div class="pm-fields">
+                <label>Title <input type="text" id="pm-title" placeholder="Golden Gate at dusk" /></label>
+                <label>Place <input type="text" id="pm-place" placeholder="San Francisco, CA" /></label>
+                <label>Date <input type="date" id="pm-date" /></label>
+              </div>
+            </li>
+            <li>
+              Save the image to <code>assets/photos/</code>, then paste this into
+              <code>assets/data/photos.json</code>:
+              <pre class="pm-out"><code id="pm-json">Choose an image to begin.</code></pre>
+              <div class="pm-actions">
+                <button type="button" class="btn ghost small" id="pm-copy">Copy JSON</button>
+                <button type="button" class="btn ghost small" id="pm-cancel">Close</button>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
       <!-- CONTACT -->
       <section class="panel" data-panel="contact">
         <h2>Find me</h2>
@@ -313,10 +377,10 @@
       <!-- RESUME placeholder panel (opens modal) -->
       <section class="panel" data-panel="resume">
         <h2>Resume</h2>
-        <p class="lede">Open the full resume in a new window or download the PDF.</p>
+        <p class="lede">Open the full resume in a new window, or send it straight to print.</p>
         <nav class="links">
           <button class="btn" data-open-resume>Open Resume</button>
-          <a href="assets/resume/resume.pdf" download="Nam_Nguyen_Resume.pdf" class="btn ghost">Download PDF</a>
+          <button type="button" class="btn ghost" data-print-resume>Print / Save PDF</button>
         </nav>
       </section>
 
@@ -335,7 +399,7 @@
       <header class="modal-head">
         <h3 id="resume-title">Resume</h3>
         <div class="modal-actions">
-          <a href="assets/resume/resume.pdf" download="Nam_Nguyen_Resume.pdf" class="btn small ghost">Download PDF</a>
+          <button type="button" class="btn small ghost" data-print-resume>Print / Save PDF</button>
           <button type="button" class="btn small ghost" data-close-resume aria-label="Close">Close ✕</button>
         </div>
       </header>
@@ -353,7 +417,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"
           integrity="sha512-onMTRKJBKz8M1TnqqDuGBlowlH0ohFzMXYRNebz+yOcc5TQr/zAKsthzhuv0hiyUKEiQEQXEynnXCvNTOk50dg=="
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="assets/js/script.js?v=7"></script>
-  <script src="assets/js/resume.js?v=4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
+          integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="assets/js/theme.js?v=2"></script>
+  <script src="assets/js/photo-map.js?v=4"></script>
+  <script src="assets/js/script.js?v=10"></script>
+  <script src="assets/js/resume.js?v=5"></script>
 </body>
 </html>

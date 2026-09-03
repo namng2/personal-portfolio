@@ -1,0 +1,275 @@
+/* ==========================================================================
+   themes.css — the whole colour system.
+   ==========================================================================
+
+   Two independent axes, the way macOS System Settings does it:
+
+     data-theme    "light" | "dark"    — set by boot-theme.js (never "auto";
+                                         auto is resolved to one of these two)
+     data-palette  "nord" | "gruvbox"  — absent means the default, Midnight
+
+   ADDING A PALETTE
+   ----------------
+   Add two blocks below (dark + light) giving five seed colours and a label,
+   then add its id to PALETTES in assets/js/theme.js. Nothing else: every
+   other token in the site derives from those five values.
+
+       [data-palette="foo"] {
+         --palette-label: "Foo";
+         --seed-bg: #101014;     page background
+         --seed-fg: #e8e8f0;     body text
+         --seed-a1: #8ab4f8;     primary accent
+         --seed-a2: #f0abfc;     secondary, pairs with a1 in gradients
+         --seed-a3: #7dd3fc;     tertiary, third shimmer stop
+       }
+       [data-palette="foo"][data-theme="light"] { ...same five, light... }
+
+   The derivation layer at the bottom turns those into the ~25 tokens the
+   rest of the CSS actually consumes. Don't hard-code colours anywhere else.
+   ========================================================================== */
+
+
+/* ---------------------------------------------------------------- seeds --
+   Dark is the default. Each palette overrides only these five values.
+   -------------------------------------------------------------------- */
+
+/* [data-theme="dark"] is listed explicitly, not just as the :root default, so
+   that theme.js can read any palette's colours off a detached probe element
+   without applying them to the page. */
+:root,
+[data-theme="dark"] {
+  --palette-label: "Midnight";
+  --seed-bg: #0a0a0a;
+  --seed-fg: #f5f5f5;
+  --seed-a1: #a78bfa;
+  --seed-a2: #f0abfc;
+  --seed-a3: #7dd3fc;
+}
+/* All five are restated rather than inheriting the accents from the block
+   above: the settings-panel probe is a child of <body>, so anything it does
+   not match a rule for would inherit the *active* palette off <html> and the
+   Midnight swatch would preview whatever palette is currently applied. */
+[data-theme="light"] {
+  --palette-label: "Midnight";
+  --seed-bg: #f5f5f5;
+  --seed-fg: #111111;
+  --seed-a1: #a78bfa;
+  --seed-a2: #f0abfc;
+  --seed-a3: #7dd3fc;
+}
+
+/* Catppuccin — Mocha / Latte. The community favourite; soft pastels. */
+[data-palette="catppuccin"] {
+  --palette-label: "Catppuccin";
+  --seed-bg: #1e1e2e;
+  --seed-fg: #cdd6f4;
+  --seed-a1: #cba6f7;
+  --seed-a2: #f5c2e7;
+  --seed-a3: #89dceb;
+}
+[data-palette="catppuccin"][data-theme="light"] {
+  --seed-bg: #eff1f5;
+  --seed-fg: #4c4f69;
+  --seed-a1: #8839ef;
+  --seed-a2: #ea76cb;
+  --seed-a3: #04a5e5;
+}
+
+/* Tokyo Night — deep indigo, high-contrast accents. */
+[data-palette="tokyo-night"] {
+  --palette-label: "Tokyo Night";
+  --seed-bg: #1a1b26;
+  --seed-fg: #c0caf5;
+  --seed-a1: #bb9af7;
+  --seed-a2: #f7768e;
+  --seed-a3: #7dcfff;
+}
+[data-palette="tokyo-night"][data-theme="light"] {
+  --seed-bg: #e1e2e7;
+  /* Tokyo Night Day's ink, not its blue: the blue is only 4.5:1 here, which
+     leaves nothing for --muted to derive from. */
+  --seed-fg: #343b58;
+  --seed-a1: #9854f1;
+  --seed-a2: #f52a65;
+  --seed-a3: #007197;
+}
+
+/* Nord — arctic, low saturation, easy on the eyes. */
+[data-palette="nord"] {
+  --palette-label: "Nord";
+  --seed-bg: #2e3440;
+  --seed-fg: #eceff4;
+  --seed-a1: #88c0d0;
+  --seed-a2: #81a1c1;
+  --seed-a3: #a3be8c;
+}
+[data-palette="nord"][data-theme="light"] {
+  --seed-bg: #eceff4;
+  --seed-fg: #2e3440;
+  --seed-a1: #5e81ac;
+  --seed-a2: #b48ead;
+  --seed-a3: #8fbcbb;
+}
+
+/* Gruvbox — warm and low-glare; the long-session favourite. */
+[data-palette="gruvbox"] {
+  --palette-label: "Gruvbox";
+  --seed-bg: #282828;
+  --seed-fg: #ebdbb2;
+  --seed-a1: #fe8019;
+  --seed-a2: #fabd2f;
+  --seed-a3: #8ec07c;
+}
+[data-palette="gruvbox"][data-theme="light"] {
+  --seed-bg: #fbf1c7;
+  --seed-fg: #3c3836;
+  --seed-a1: #af3a03;
+  --seed-a2: #b57614;
+  --seed-a3: #427b58;
+}
+
+/* Rosé Pine — muted rose and iris on deep plum. */
+[data-palette="rose-pine"] {
+  --palette-label: "Rosé Pine";
+  --seed-bg: #191724;
+  --seed-fg: #e0def4;
+  --seed-a1: #c4a7e7;
+  --seed-a2: #ebbcba;
+  --seed-a3: #9ccfd8;
+}
+[data-palette="rose-pine"][data-theme="light"] {
+  --seed-bg: #faf4ed;
+  --seed-fg: #575279;
+  --seed-a1: #907aa9;
+  --seed-a2: #d7827e;
+  --seed-a3: #56949f;
+}
+
+/* Dracula — the classic; vivid purple and pink. */
+[data-palette="dracula"] {
+  --palette-label: "Dracula";
+  --seed-bg: #282a36;
+  --seed-fg: #f8f8f2;
+  --seed-a1: #bd93f9;
+  --seed-a2: #ff79c6;
+  --seed-a3: #8be9fd;
+}
+[data-palette="dracula"][data-theme="light"] {
+  --seed-bg: #f8f8f2;
+  --seed-fg: #282a36;
+  --seed-a1: #644ac9;
+  --seed-a2: #a3144d;
+  --seed-a3: #036a96;
+}
+
+/* Solarized — precision-designed contrast, teal base. */
+[data-palette="solarized"] {
+  --palette-label: "Solarized";
+  --seed-bg: #002b36;
+  --seed-fg: #93a1a1;
+  --seed-a1: #6c71c4;
+  --seed-a2: #d33682;
+  --seed-a3: #2aa198;
+}
+[data-palette="solarized"][data-theme="light"] {
+  --seed-bg: #fdf6e3;
+  /* base02 rather than base01 — Solarized is deliberately low-contrast, and
+     base01 leaves secondary text under 3:1. */
+  --seed-fg: #073642;
+  --seed-a1: #268bd2;
+  --seed-a2: #d33682;
+  --seed-a3: #2aa198;
+}
+
+/* Monochrome — no hue at all; lets the wallpaper carry the colour. */
+[data-palette="mono"] {
+  --palette-label: "Monochrome";
+  --seed-bg: #0a0a0a;
+  --seed-fg: #f5f5f5;
+  --seed-a1: #e5e5e5;
+  --seed-a2: #a3a3a3;
+  --seed-a3: #d4d4d4;
+}
+[data-palette="mono"][data-theme="light"] {
+  --seed-bg: #f5f5f5;
+  --seed-fg: #111111;
+  --seed-a1: #404040;
+  --seed-a2: #737373;
+  --seed-a3: #525252;
+}
+
+
+/* ----------------------------------------------------------- derivation --
+   Everything the rest of the site consumes. Written once, in terms of the
+   seeds, so a new palette needs none of it.
+
+   color-mix() with `transparent` premultiplies alpha, so
+   `color-mix(in oklch, X 14%, transparent)` is "X at 14% opacity".
+   -------------------------------------------------------------------- */
+
+:root {
+  /* Mode-dependent knobs. Glass edges and sheen are white highlights in BOTH
+     modes (that is what makes it read as glass), just at different strength,
+     so they key off --glass-lift rather than off the text colour. */
+  --glass-lift: #ffffff;
+  --glass-edge-pct: 14%;
+  --glass-sheen-pct: 16%;
+  --wallpaper-tint: color-mix(in oklch, var(--seed-bg) 55%, transparent);
+}
+[data-theme="light"] {
+  --glass-edge-pct: 70%;
+  --glass-sheen-pct: 85%;
+  /* Light mode shows the photo untouched; only dark mode dims it. */
+  --wallpaper-tint: transparent;
+}
+
+:root {
+  /* Fallbacks first: a browser without color-mix() drops the second
+     declaration at parse time and keeps these, so the site stays legible
+     (on the default palette) instead of rendering with unset colours. */
+  --bg: #0a0a0a;
+  --fg: #f5f5f5;
+  --muted: #888888;
+  --rule: #1e1e1e;
+  --card: #101010;
+
+  --bg: var(--seed-bg);
+  --fg: var(--seed-fg);
+  /* 65%, not the 55% this started at: secondary text has to clear 3:1 on the
+     lower-contrast palettes too (Solarized dark is the binding constraint at
+     3.1:1). Measured across all 9 palettes x both modes. */
+  --muted: color-mix(in oklch, var(--seed-fg) 65%, var(--seed-bg));
+  --rule: color-mix(in oklch, var(--seed-fg) 12%, var(--seed-bg));
+  --card: color-mix(in oklch, var(--seed-fg) 5%, var(--seed-bg));
+
+  --accent-1: var(--seed-a1);
+  --accent-2: var(--seed-a2);
+  --accent-3: var(--seed-a3);
+  --grad: linear-gradient(100deg, var(--accent-1), var(--accent-2));
+  --grad-soft: linear-gradient(
+    100deg,
+    color-mix(in oklch, var(--accent-1) 18%, transparent),
+    color-mix(in oklch, var(--accent-2) 18%, transparent)
+  );
+
+  /* Browser chrome surfaces */
+  --surface: color-mix(in oklch, var(--card) 88%, transparent);
+  --chrome-bg: color-mix(in oklch, var(--seed-fg) 9%, var(--seed-bg));
+  --chrome-bg-2: color-mix(in oklch, var(--seed-fg) 6%, var(--seed-bg));
+  --address-bg: color-mix(in oklch, var(--seed-fg) 3%, var(--seed-bg));
+  --url-pill: color-mix(in oklch, var(--seed-fg) 9%, var(--seed-bg));
+  --hover-tint: color-mix(in oklch, var(--seed-fg) 7%, transparent);
+  --cursor-ring-active: color-mix(in oklch, var(--seed-fg) 8%, transparent);
+  --tab-drag-bg: color-mix(in oklch, var(--chrome-bg) 95%, transparent);
+  --scroll-thumb: color-mix(in oklch, var(--seed-fg) 22%, transparent);
+  --scroll-thumb-hover: color-mix(in oklch, var(--seed-fg) 40%, transparent);
+
+  /* Liquid glass */
+  --glass-bg: color-mix(in oklch, var(--chrome-bg) 55%, transparent);
+  --glass-edge: color-mix(in oklch, var(--glass-lift) var(--glass-edge-pct), transparent);
+  --glass-sheen: color-mix(in oklch, var(--glass-lift) var(--glass-sheen-pct), transparent);
+  --glass-hover: color-mix(in oklch, var(--seed-fg) 13%, transparent);
+  --glass-menu-bg: color-mix(in oklch, var(--chrome-bg) 78%, transparent);
+  --mb-fg: color-mix(in oklch, var(--seed-fg) 92%, transparent);
+  --mb-dim: color-mix(in oklch, var(--seed-fg) 45%, transparent);
+}
