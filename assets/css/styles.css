@@ -385,9 +385,10 @@ html, body {
    ========================================================================== */
 .browser {
   position: fixed;
-  top: calc(var(--menubar-h) + 1.25rem);
+  /* Centred in the space below the menu bar, not pinned to the top of it */
+  top: calc(var(--menubar-h) + (100vh - var(--menubar-h)) / 2);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: min(76rem, calc(100vw - 4rem));
   height: min(900px, calc(100vh - var(--menubar-h) - 2.5rem));
   display: flex;
@@ -411,6 +412,35 @@ html, body {
   height: calc(100vh - var(--menubar-h));
   border-radius: 0;
 }
+/* Bottom-right grip. The site hides the native cursor on fine pointers, so the
+   chevron itself is the affordance rather than a cursor change. */
+.resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  z-index: 20;
+  cursor: nwse-resize;
+  touch-action: none;
+  opacity: 0.35;
+  transition: opacity 0.15s ease;
+}
+.resize-handle::before,
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  background: var(--fg);
+  border-radius: 1px;
+}
+.resize-handle::before { bottom: 3px; width: 11px; height: 1.5px; }
+.resize-handle::after  { bottom: 3px; width: 1.5px; height: 11px; }
+.resize-handle:hover { opacity: 0.8; }
+.browser.resizing-window .resize-handle { opacity: 0.9; }
+.browser.resizing-window { transition: none; }
+.browser.maximized .resize-handle { display: none; }
+
 .browser.dragging-window {
   cursor: grabbing;
   transition: none;
@@ -739,6 +769,7 @@ main.viewport > .panel:not([data-panel="home"]) {
     border-right: none;
   }
   .browser-chrome { cursor: default; }
+  .resize-handle { display: none; }
   .tab-label { display: none; }
   .tab { padding: 0.55rem 0.7rem; }
   .url-bar { font-size: 0.72rem; padding: 0.35rem 0.75rem; }

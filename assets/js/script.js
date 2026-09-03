@@ -378,6 +378,81 @@ function particleColor(alpha) {
     browser.style.transform = "";
     pinned = false;
   };
+
+  // Resizing anchors the top-left corner, so it needs the same conversion from
+  // the centering transform to absolute coordinates that dragging does.
+  window.__pinWindow = pin;
+})();
+
+// --------------------------------------------------------------------------
+// Resizable browser window — drag the bottom-right grip
+// --------------------------------------------------------------------------
+(function resizableWindow() {
+  const browser = document.querySelector(".browser");
+  const handle = browser?.querySelector(".resize-handle");
+  if (!browser || !handle) return;
+  if (window.matchMedia("(max-width: 640px)").matches) return;
+
+  const MIN_W = 420;
+  const MIN_H = 320;
+
+  let pointerId = null;
+  let startX = 0, startY = 0, startW = 0, startH = 0;
+
+  handle.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    // Pin first: while the window is still centred by a transform, changing its
+    // size would grow it from the middle instead of the top-left corner.
+    window.__pinWindow?.();
+    browser.classList.remove("maximized");
+
+    pointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    const r = browser.getBoundingClientRect();
+    startW = r.width;
+    startH = r.height;
+    browser.classList.add("resizing-window");
+    handle.setPointerCapture(pointerId);
+  });
+
+  handle.addEventListener("pointermove", (e) => {
+    if (pointerId === null || e.pointerId !== pointerId) return;
+    const r = browser.getBoundingClientRect();
+    const maxW = window.innerWidth - r.left - 8;
+    const maxH = window.innerHeight - r.top - 8;
+    browser.style.width =
+      Math.max(MIN_W, Math.min(maxW, startW + e.clientX - startX)) + "px";
+    browser.style.height =
+      Math.max(MIN_H, Math.min(maxH, startH + e.clientY - startY)) + "px";
+  });
+
+  function end(e) {
+    if (pointerId === null || (e && e.pointerId !== pointerId)) return;
+    try { handle.releasePointerCapture(pointerId); } catch (_) {}
+    pointerId = null;
+    browser.classList.remove("resizing-window");
+  }
+  handle.addEventListener("pointerup", end);
+  handle.addEventListener("pointercancel", end);
+
+  // Zoom toggles fullscreen, remembering the size to come back to. Inline
+  // width/height would otherwise win over the .maximized rules.
+  let restore = null;
+  window.__toggleZoom = () => {
+    if (browser.classList.contains("maximized")) {
+      browser.classList.remove("maximized");
+      if (restore) Object.assign(browser.style, restore);
+      restore = null;
+    } else {
+      const s = browser.style;
+      restore = { width: s.width, height: s.height, left: s.left, top: s.top, transform: s.transform };
+      ["width", "height", "left", "top", "transform"].forEach((p) => (browser.style[p] = ""));
+      browser.classList.add("maximized");
+    }
+  };
 })();
 
 // --------------------------------------------------------------------------
@@ -684,7 +759,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       { label: "Reload", key: "⌘R", run: () => click('[data-nav="reload"]') },
     ],
     window: [
-      { label: "Zoom", run: () => document.querySelector(".browser")?.classList.toggle("maximized") },
+      { label: "Zoom", run: () => window.__toggleZoom?.() },
       { label: "Center Window", run: () => window.__centerWindow?.() },
     ],
     help: [
