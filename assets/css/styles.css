@@ -306,7 +306,10 @@ html, body {
 }
 .mb-battery.low .mb-batt-fill { fill: #ff453a; }
 .mb-battery.charging .mb-batt-fill { fill: #32d74b; }
-.mb-batt-bolt { fill: var(--bg); }
+/* Driven by the .charging class, not the `hidden` attribute: `hidden` is an
+   HTMLElement feature and has no effect on an SVG <path>. */
+.mb-batt-bolt { fill: var(--bg); display: none; }
+.mb-battery.charging .mb-batt-bolt { display: inline; }
 
 .mb-clock {
   gap: 0.5rem;

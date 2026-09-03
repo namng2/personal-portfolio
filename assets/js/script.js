@@ -666,7 +666,6 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
     const wrap = document.getElementById("mb-battery");
     const pct = document.getElementById("mb-batt-pct");
     const fill = document.getElementById("mb-batt-fill");
-    const bolt = document.getElementById("mb-batt-bolt");
     if (!wrap || !fill) return;
 
     const FULL_W = 21.7; // matches the <rect> width in the SVG
@@ -676,7 +675,6 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       pct.textContent = Math.round(level * 100) + "%";
       wrap.classList.toggle("low", level <= 0.2 && !charging);
       wrap.classList.toggle("charging", charging);
-      bolt.hidden = !charging;
     }
 
     if (!navigator.getBattery) {
