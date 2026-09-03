@@ -15,8 +15,12 @@ index.html              markup + CSP + pinned CDN scripts
 assets/css/styles.css   all styles; design tokens in :root / [data-theme="light"]
 assets/js/script.js     particles, cursor, tabs, window drag/resize, menu bar
 assets/js/resume.js     fetches + parses resume.tex into the modal
-assets/resume/resume.tex  the resume content (source of truth)
+assets/resume/resume.tex  the resume content rendered into the modal
+assets/resume/resume.pdf  the file the "Download PDF" buttons hand out
 ```
+
+Keep the two in sync — `.tex` is what visitors *read*, `.pdf` is what they
+*download*, and nothing regenerates one from the other.
 
 ## Traps that have already cost time — read before editing
 

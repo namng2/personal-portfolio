@@ -727,7 +727,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       { label: "New Tab", key: "⌘T", run: () => go("home") },
       { label: "Open Resume…", key: "⌘O", run: () => click("[data-open-resume]") },
       { sep: true },
-      { label: "Download .tex", run: () => click('a[href$="resume.tex"]') },
+      { label: "Download PDF", run: () => click('a[href$="resume.pdf"]') },
       { label: "Print…", key: "⌘P", run: () => window.print() },
     ],
     edit: [

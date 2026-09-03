@@ -9,7 +9,6 @@
   const body = document.getElementById("resume-render");
   const openers = document.querySelectorAll("[data-open-resume]");
   const closers = document.querySelectorAll("[data-close-resume]");
-  const printBtn = document.querySelector("[data-print-resume]");
   if (!modal || !body) return;
 
   let loaded = false;
@@ -96,13 +95,6 @@
 
   openers.forEach((b) => b.addEventListener("click", openModal));
   closers.forEach((b) => b.addEventListener("click", closeModal));
-  if (printBtn) {
-    printBtn.addEventListener("click", () => {
-      document.body.classList.add("printing");
-      window.print();
-      setTimeout(() => document.body.classList.remove("printing"), 200);
-    });
-  }
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
   });
