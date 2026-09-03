@@ -177,6 +177,8 @@ const isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").ma
   if (!prefersReducedMotion) tick();
 })();
 
+
+
 // --------------------------------------------------------------------------
 // Card tilt on hover
 // --------------------------------------------------------------------------
@@ -198,6 +200,8 @@ const isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").ma
     });
   });
 })();
+
+
 
 // --------------------------------------------------------------------------
 // Scroll reveals + progress bar (GSAP if available)

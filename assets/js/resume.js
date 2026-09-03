@@ -46,7 +46,7 @@
 
   async function load() {
     try {
-      const res = await fetch("resume.tex", { cache: "no-store" });
+      const res = await fetch("assets/resume/resume.tex", { cache: "no-store" });
       if (!res.ok) throw new Error("HTTP " + res.status);
       const src = await res.text();
       body.innerHTML = parseResume(src);
