@@ -710,7 +710,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       { heading: "Appearance" },
       ...appearanceItems,
       { sep: true },
-      { label: "App Store…", run: () => open("https://github.com/your-handle") },
+      { label: "App Store…", run: () => window.open("https://github.com/your-handle", "_blank", "noopener") },
       { sep: true },
       { label: "Restart…", run: () => location.reload() },
     ],
@@ -763,8 +763,8 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
     help: [
       { label: "Portfolio Help", run: () => go("about") },
       { sep: true },
-      { label: "GitHub", run: () => open("https://github.com/your-handle") },
-      { label: "Email", run: () => open("mailto:you@example.com") },
+      { label: "GitHub", run: () => window.open("https://github.com/your-handle", "_blank", "noopener") },
+      { label: "Email", run: () => window.open("mailto:you@example.com", "_blank", "noopener") },
     ],
   };
 

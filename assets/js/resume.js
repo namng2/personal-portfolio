@@ -112,7 +112,11 @@
   // ------------------------------------------------------------------------
 
   function parseResume(src) {
-    src = src.replace(/(?<!\\)%[^\n]*/g, ""); // strip LaTeX comments
+    // Strip LaTeX comments (a % not escaped as \%). Written with a captured
+    // preceding character rather than a lookbehind: a lookbehind is a syntax
+    // error in Safari < 16.4, which would fail to parse this whole file and
+    // leave the resume unable to open at all.
+    src = src.replace(/(^|[^\\])%[^\n]*/g, "$1");
     const begin = src.indexOf("\\begin{document}");
     if (begin !== -1) src = src.slice(begin + "\\begin{document}".length);
     const end = src.indexOf("\\end{document}");
@@ -422,9 +426,9 @@
     const items = pieces.map((html) => {
       const plain = stripTags(html).replace(/\s+/g, " ").trim();
       let href = null;
-      if (/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(plain)) href = "mailto:" + plain;
-      else if (/^https?:\/\//i.test(plain)) href = plain;
-      else if (/^(www\.|github\.com|linkedin\.com|twitter\.com|x\.com|dev\.to)/i.test(plain)) href = "https://" + plain;
+      if (/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(plain)) href = safeUrl("mailto:" + plain);
+      else if (/^https?:\/\//i.test(plain)) href = safeUrl(plain);
+      else if (/^(www\.|github\.com|linkedin\.com|twitter\.com|x\.com|dev\.to)/i.test(plain)) href = safeUrl(plain);
 
       if (/<a\s/i.test(html)) {
         return `<span class="r-copy">${html}</span>`;
@@ -525,13 +529,16 @@
     if (name === "href") {
       const raw = args[0] || "";
       const text = processInline(args[1] || raw);
-      const full = /^https?:\/\/|^mailto:/i.test(raw) ? raw : "https://" + raw;
-      return `<a href="${escapeAttr(full)}" target="_blank" rel="noopener">${text}</a>`;
+      const full = safeUrl(raw);
+      // Refused scheme: keep the label, drop the link.
+      if (!full) return text;
+      return `<a href="${escapeAttr(full)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
     }
     if (name === "url") {
       const raw = args[0] || "";
-      const full = /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
-      return `<a href="${escapeAttr(full)}" target="_blank" rel="noopener">${escapeHtml(raw)}</a>`;
+      const full = safeUrl(raw);
+      if (!full) return escapeHtml(raw);
+      return `<a href="${escapeAttr(full)}" target="_blank" rel="noopener noreferrer">${escapeHtml(raw)}</a>`;
     }
     if (/^(small|Small|large|Large|huge|Huge|normalsize|footnotesize|scriptsize|tiny|textnormal|textrm)$/.test(name)) {
       return args[0] ? processInline(args[0]) : "";
@@ -565,6 +572,19 @@
       .replace(/\\&/g, "&")
       .replace(/\\ldots|\\dots/g, "…");
     return escapeHtml(r);
+  }
+
+  // Only http(s) and mailto ever reach an href. Anything else — javascript:,
+  // data:, vbscript:, or a bare host — is either given an https:// prefix or
+  // dropped. Prefixing alone happens to defuse javascript: today, but relying
+  // on that is fragile; this makes the allowlist the actual rule.
+  function safeUrl(raw) {
+    const s = String(raw == null ? "" : raw).replace(/[\x00-\x20]/g, "");
+    if (!s) return null;
+    if (/^mailto:/i.test(s)) return s;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return null; // some other scheme — refuse
+    return "https://" + s.replace(/^\/+/, "");       // bare host, e.g. github.com/x
   }
 
   function escapeHtml(s) {
