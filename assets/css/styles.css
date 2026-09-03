@@ -34,7 +34,8 @@
   --mb-dim: rgba(255, 255, 255, 0.45);
 
   /* Desktop wallpaper. Swap the file in assets/img/ or set this to none.
-     The tint below sits over the photo so the glass chrome stays readable. */
+     Dark mode dims the photo so it stays easy on the eyes; light mode
+     overrides the tint to transparent and shows it at full strength. */
   --wallpaper: url("../img/wallpaper.jpg");
   --wallpaper-tint: rgba(10, 10, 10, 0.55);
 }
@@ -63,7 +64,8 @@
   --mb-fg: rgba(0, 0, 0, 0.88);
   --mb-dim: rgba(0, 0, 0, 0.42);
 
-  --wallpaper-tint: rgba(245, 245, 245, 0.45);
+  /* Light theme shows the photo untouched; only dark mode dims it. */
+  --wallpaper-tint: transparent;
 }
 
 html { background: var(--bg); }
