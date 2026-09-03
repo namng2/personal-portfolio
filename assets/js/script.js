@@ -345,7 +345,10 @@ function particleColor(alpha) {
     // Keep at least 80px horizontally and 40px vertically on screen
     const minLeft = 80 - w;
     const maxLeft = window.innerWidth - 80;
-    const minTop = 0;
+    // Don't let the window slide underneath the menu bar
+    const minTop = parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue("--menubar-h"), 10
+    ) || 30;
     const maxTop = window.innerHeight - 40;
     const nl = Math.max(minLeft, Math.min(maxLeft, originLeft + dx));
     const nt = Math.max(minTop, Math.min(maxTop, originTop + dy));
@@ -363,6 +366,14 @@ function particleColor(alpha) {
   }
   chrome.addEventListener("pointerup", endDrag);
   chrome.addEventListener("pointercancel", endDrag);
+
+  // Menu bar "Center Window" hands control back to the CSS centering rules.
+  window.__centerWindow = () => {
+    browser.style.left = "";
+    browser.style.top = "";
+    browser.style.transform = "";
+    pinned = false;
+  };
 })();
 
 // --------------------------------------------------------------------------
@@ -537,5 +548,248 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
 
   btn.addEventListener("click", () => {
     applyTheme(root.dataset.theme === "light" ? "dark" : "light");
+  });
+
+  // Menu bar drives the theme through these instead of faking button clicks
+  window.__setTheme = applyTheme;
+  window.__getTheme = () => (root.dataset.theme === "light" ? "light" : "dark");
+})();
+
+// --------------------------------------------------------------------------
+// macOS menu bar — live clock, battery, and dropdown menus
+// --------------------------------------------------------------------------
+(function menubar() {
+  const bar = document.querySelector(".menubar");
+  if (!bar) return;
+
+  // ---- Clock: "Wed Sep 3" / "12:31 AM", refreshed on the minute ----
+  (function clock() {
+    const dateEl = document.getElementById("mb-date");
+    const timeEl = document.getElementById("mb-time");
+    if (!dateEl || !timeEl) return;
+
+    function render() {
+      const now = new Date();
+      dateEl.textContent = now.toLocaleDateString([], {
+        weekday: "short", month: "short", day: "numeric",
+      });
+      timeEl.textContent = now
+        .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+        .replace(/\s/g, " ");
+      // Re-sync on the next minute boundary rather than drifting on an interval
+      setTimeout(render, (60 - now.getSeconds()) * 1000 + 50);
+    }
+    render();
+  })();
+
+  // ---- Battery: real level via the Battery Status API where supported ----
+  (function battery() {
+    const wrap = document.getElementById("mb-battery");
+    const pct = document.getElementById("mb-batt-pct");
+    const fill = document.getElementById("mb-batt-fill");
+    const bolt = document.getElementById("mb-batt-bolt");
+    if (!wrap || !fill) return;
+
+    const FULL_W = 21.7; // matches the <rect> width in the SVG
+
+    function paint(level, charging) {
+      fill.setAttribute("width", String(Math.max(1.5, FULL_W * level)));
+      pct.textContent = Math.round(level * 100) + "%";
+      wrap.classList.toggle("low", level <= 0.2 && !charging);
+      wrap.classList.toggle("charging", charging);
+      bolt.hidden = !charging;
+    }
+
+    if (!navigator.getBattery) {
+      // Unsupported (Safari, Firefox): show a full battery, drop the number
+      // rather than inventing one.
+      pct.style.display = "none";
+      return;
+    }
+
+    navigator.getBattery().then((b) => {
+      const sync = () => paint(b.level, b.charging);
+      sync();
+      b.addEventListener("levelchange", sync);
+      b.addEventListener("chargingchange", sync);
+    }).catch(() => { pct.style.display = "none"; });
+  })();
+
+  // ---- Dropdown menus ----
+  const go = (tab) => window.__activateTab?.(tab);
+  const click = (sel) => document.querySelector(sel)?.click();
+  const setTheme = (t) => window.__setTheme?.(t);
+  const themeIs = (t) => () => window.__getTheme?.() === t;
+
+  const appearanceItems = [
+    { label: "Light", check: themeIs("light"), run: () => setTheme("light") },
+    { label: "Dark", check: themeIs("dark"), run: () => setTheme("dark") },
+  ];
+
+  const MENUS = {
+    apple: [
+      { label: "About This Portfolio", run: () => go("about") },
+      { sep: true },
+      { heading: "Appearance" },
+      ...appearanceItems,
+      { sep: true },
+      { label: "App Store…", run: () => open("https://github.com/your-handle") },
+      { sep: true },
+      { label: "Restart…", run: () => location.reload() },
+    ],
+    portfolio: [
+      { label: "About Portfolio", run: () => go("about") },
+      { sep: true },
+      { heading: "Appearance" },
+      ...appearanceItems,
+      { sep: true },
+      { label: "Hide Portfolio", key: "⌘H", disabled: true },
+      { label: "Quit Portfolio", key: "⌘Q", disabled: true },
+    ],
+    file: [
+      { label: "New Tab", key: "⌘T", run: () => go("home") },
+      { label: "Open Resume…", key: "⌘O", run: () => click("[data-open-resume]") },
+      { sep: true },
+      { label: "Download .tex", run: () => click('a[href$="resume.tex"]') },
+      { label: "Print…", key: "⌘P", run: () => window.print() },
+    ],
+    edit: [
+      { label: "Undo", key: "⌘Z", disabled: true },
+      { label: "Redo", key: "⇧⌘Z", disabled: true },
+      { sep: true },
+      { label: "Cut", key: "⌘X", disabled: true },
+      { label: "Copy", key: "⌘C", disabled: true },
+      { label: "Paste", key: "⌘V", disabled: true },
+      { sep: true },
+      {
+        label: "Find…",
+        key: "⌘F",
+        run: () => { go("home"); setTimeout(() => document.getElementById("search-input")?.focus(), 120); },
+      },
+    ],
+    view: [
+      { label: "Home", key: "⌘1", run: () => go("home") },
+      { label: "About", key: "⌘2", run: () => go("about") },
+      { label: "Skills", key: "⌘3", run: () => go("skills") },
+      { label: "Projects", key: "⌘4", run: () => go("projects") },
+      { label: "Contact", key: "⌘5", run: () => go("contact") },
+      { sep: true },
+      { heading: "Appearance" },
+      ...appearanceItems,
+      { sep: true },
+      { label: "Reload", key: "⌘R", run: () => click('[data-nav="reload"]') },
+    ],
+    window: [
+      { label: "Zoom", run: () => document.querySelector(".browser")?.classList.toggle("maximized") },
+      { label: "Center Window", run: () => window.__centerWindow?.() },
+    ],
+    help: [
+      { label: "Portfolio Help", run: () => go("about") },
+      { sep: true },
+      { label: "GitHub", run: () => open("https://github.com/your-handle") },
+      { label: "Email", run: () => open("mailto:you@example.com") },
+    ],
+  };
+
+  let openEl = null;
+  let panel = null;
+
+  function close() {
+    panel?.remove();
+    panel = null;
+    openEl?.classList.remove("open");
+    openEl?.setAttribute("aria-expanded", "false");
+    openEl = null;
+  }
+
+  function openMenu(btn) {
+    close();
+    const items = MENUS[btn.dataset.menu];
+    if (!items) return;
+
+    panel = document.createElement("div");
+    panel.className = "mb-menu";
+    panel.setAttribute("role", "menu");
+
+    for (const item of items) {
+      if (item.sep) {
+        panel.appendChild(document.createElement("hr"));
+        continue;
+      }
+      if (item.heading) {
+        const h = document.createElement("p");
+        h.className = "mb-heading";
+        h.textContent = item.heading;
+        panel.appendChild(h);
+        continue;
+      }
+
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", item.check ? "menuitemradio" : "menuitem");
+      b.disabled = !!item.disabled;
+
+      const label = document.createElement("span");
+      label.className = "mb-label";
+      if (item.check) {
+        const on = item.check();
+        b.setAttribute("aria-checked", on ? "true" : "false");
+        const tick = document.createElement("span");
+        tick.className = "mb-check";
+        tick.textContent = on ? "✓" : "";
+        label.appendChild(tick);
+      }
+      label.appendChild(document.createTextNode(item.label));
+      b.appendChild(label);
+
+      if (item.key) {
+        const k = document.createElement("span");
+        k.className = "mb-key";
+        k.textContent = item.key;
+        b.appendChild(k);
+      }
+      if (item.run) {
+        b.addEventListener("click", () => { close(); item.run(); });
+      }
+      panel.appendChild(b);
+    }
+
+    document.body.appendChild(panel);
+    // Keep the panel on screen when a right-hand menu would overflow
+    const left = btn.getBoundingClientRect().left;
+    panel.style.left =
+      Math.min(left, window.innerWidth - panel.offsetWidth - 8) + "px";
+
+    openEl = btn;
+    btn.classList.add("open");
+    btn.setAttribute("aria-expanded", "true");
+  }
+
+  bar.querySelectorAll(".mb-item[data-menu]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openEl === btn ? close() : openMenu(btn);
+    });
+    // Once a menu is open, hovering a sibling switches to it (macOS behavior)
+    btn.addEventListener("mouseenter", () => {
+      if (openEl && openEl !== btn) openMenu(btn);
+    });
+  });
+
+  document.addEventListener("click", () => close());
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+  window.addEventListener("resize", close);
+
+  // ---- Right-side shortcuts ----
+  document.getElementById("mb-control")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    click("#theme-toggle");
+  });
+  document.getElementById("mb-search")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    go("home");
+    setTimeout(() => document.getElementById("search-input")?.focus(), 120);
   });
 })();

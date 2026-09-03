@@ -5,9 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Your Name — Software Engineer</title>
   <meta name="description" content="Portfolio of Your Name, software engineer." />
-  <link rel="stylesheet" href="assets/css/styles.css?v=3" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=4" />
 </head>
 <body>
+  <!-- macOS-style menu bar -->
+  <div class="menubar" role="menubar" aria-label="Menu bar">
+    <div class="menubar-left">
+      <button class="mb-item mb-apple" role="menuitem" data-menu="apple" aria-haspopup="true" aria-expanded="false" aria-label="Apple menu">
+        <svg viewBox="0 0 16 20" aria-hidden="true" focusable="false">
+          <path d="M13.1 10.6c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.61-1.7-3.18-1.72-1.35-.14-2.64.79-3.33.79-.69 0-1.74-.77-2.86-.75-1.47.02-2.83.86-3.59 2.18C.48 10.45 1.63 14.4 3.1 16.56c.73 1.06 1.6 2.24 2.74 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.92-1.08 2.64-2.14.83-1.22 1.18-2.4 1.2-2.46-.03-.01-2.29-.88-2.31-3.49z"/>
+          <path d="M11.03 4.2c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.55 1.31-.56.65-1.05 1.69-.92 2.68.97.08 1.96-.5 2.57-1.23z"/>
+        </svg>
+      </button>
+      <button class="mb-item mb-app" role="menuitem" data-menu="portfolio" aria-haspopup="true" aria-expanded="false">Portfolio</button>
+      <button class="mb-item" role="menuitem" data-menu="file" aria-haspopup="true" aria-expanded="false">File</button>
+      <button class="mb-item" role="menuitem" data-menu="edit" aria-haspopup="true" aria-expanded="false">Edit</button>
+      <button class="mb-item" role="menuitem" data-menu="view" aria-haspopup="true" aria-expanded="false">View</button>
+      <button class="mb-item" role="menuitem" data-menu="window" aria-haspopup="true" aria-expanded="false">Window</button>
+      <button class="mb-item" role="menuitem" data-menu="help" aria-haspopup="true" aria-expanded="false">Help</button>
+    </div>
+
+    <div class="menubar-right">
+      <span class="mb-status mb-battery" id="mb-battery" title="Battery">
+        <span class="mb-batt-pct" id="mb-batt-pct">—</span>
+        <svg class="mb-batt-icon" viewBox="0 0 30 14" aria-hidden="true" focusable="false">
+          <rect class="mb-batt-shell" x="0.75" y="0.75" width="25" height="12.5" rx="3.5"/>
+          <path class="mb-batt-cap" d="M27.4 5.1v3.8c.85-.3 1.35-.95 1.35-1.9s-.5-1.6-1.35-1.9z"/>
+          <rect class="mb-batt-fill" id="mb-batt-fill" x="2.4" y="2.4" width="21.7" height="9.2" rx="2"/>
+          <path class="mb-batt-bolt" id="mb-batt-bolt" d="M14.6 2.4l-4 5.2h2.7l-1 4 4-5.2h-2.7z" hidden/>
+        </svg>
+      </span>
+
+      <span class="mb-status" title="Wi-Fi">
+        <svg class="mb-icon" viewBox="0 0 18 14" aria-hidden="true" focusable="false">
+          <path d="M9 12.6a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+          <path d="M5.4 8.5a5.2 5.2 0 017.2 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <path d="M2.9 5.9a8.8 8.8 0 0112.2 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </span>
+
+      <span class="mb-status" title="Bluetooth">
+        <svg class="mb-icon" viewBox="0 0 12 18" aria-hidden="true" focusable="false">
+          <path d="M5 1v7l4-3.5L5 1zM5 10v7l4-3.5L5 10zM2 5.5l7 6M2 12.5l7-6"
+                fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+
+      <button class="mb-status mb-btn" id="mb-search" title="Search portfolio" aria-label="Search">
+        <svg class="mb-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M10.8 10.8L14.5 14.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <button class="mb-status mb-btn" id="mb-control" title="Toggle theme" aria-label="Toggle theme">
+        <svg class="mb-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M2 4.5h5M11 4.5h3M2 11.5h3M9 11.5h5"
+                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="9" cy="4.5" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="7" cy="11.5" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </button>
+
+      <button class="mb-status mb-btn mb-clock" id="mb-clock" title="Date and time">
+        <span id="mb-date"></span>
+        <span id="mb-time"></span>
+      </button>
+    </div>
+  </div>
+
   <canvas id="bg"></canvas>
   <div id="cursor" aria-hidden="true"></div>
   <div id="cursor-ring" aria-hidden="true"></div>
@@ -264,7 +331,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script src="assets/js/script.js?v=3"></script>
+  <script src="assets/js/script.js?v=4"></script>
   <script src="assets/js/resume.js?v=2"></script>
 </body>
 </html>
