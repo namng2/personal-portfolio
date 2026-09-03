@@ -1148,8 +1148,15 @@ footer {
   justify-content: space-between;
   gap: 1rem;
   align-items: baseline;
-  flex-wrap: wrap;
+  /* nowrap: with wrap, flex assigns items to lines before shrinking them, so a
+     full-width title pushed the dates to their own line. Narrow screens get a
+     column layout from the media query below instead. */
+  flex-wrap: nowrap;
 }
+/* The title column absorbs the slack and wraps internally; without this a long
+   project title pushes the dates onto their own left-aligned line. */
+.r-entry-left { flex: 1 1 auto; min-width: 0; }
+.r-entry-aside { flex: 0 0 auto; }
 .r-entry-title, .r-project-name { font-weight: 600; }
 .r-entry-sub { color: var(--muted); font-size: 0.9rem; }
 .r-entry-aside { text-align: right; font-size: 0.85rem; }
@@ -1178,10 +1185,14 @@ footer {
 
 .r-skill {
   display: grid;
-  grid-template-columns: 7rem 1fr;
+  /* 10rem fits the longest single-token label ("FRAMEWORKS/TOOLS", 157px);
+     longer labels wrap at their spaces. */
+  grid-template-columns: 10rem 1fr;
   gap: 0.75rem;
-  align-items: center;
-  margin: 0.4rem 0;
+  /* baseline, not center — a one-line label should sit against the first row
+     of chips, not float in the middle of a two-row block. */
+  align-items: baseline;
+  margin: 0.55rem 0;
 }
 @media (max-width: 520px) {
   .r-skill { grid-template-columns: 1fr; gap: 0.25rem; }
@@ -1193,6 +1204,9 @@ footer {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
+  /* "FRAMEWORKS/TOOLS" is a single token and would otherwise spill into the
+     chips column rather than breaking. */
+  overflow-wrap: anywhere;
 }
 .r-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .r-tag {
