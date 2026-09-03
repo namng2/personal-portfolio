@@ -129,9 +129,13 @@ function particleColor(alpha) {
     document.body.classList.add("cursor-ready");
   });
 
+  // How hard the ring chases the pointer each frame: 1 locks it to the dot,
+  // lower values trail further behind.
+  const RING_EASE = 0.45;
+
   function animate() {
-    rx += (mx - rx) * 0.18;
-    ry += (my - ry) * 0.18;
+    rx += (mx - rx) * RING_EASE;
+    ry += (my - ry) * RING_EASE;
     ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
     requestAnimationFrame(animate);
   }
