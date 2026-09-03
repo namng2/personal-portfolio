@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Name — Software Engineer</title>
+  <meta name="description" content="Portfolio of Your Name, software engineer." />
+  <link rel="stylesheet" href="assets/css/styles.css?v=4" />
+</head>
+<body>
+  <!-- macOS-style menu bar -->
+  <div class="menubar" role="menubar" aria-label="Menu bar">
+    <div class="menubar-left">
+      <button class="mb-item mb-apple" role="menuitem" data-menu="apple" aria-haspopup="true" aria-expanded="false" aria-label="Apple menu">
+        <svg viewBox="0 0 16 20" aria-hidden="true" focusable="false">
+          <path d="M13.1 10.6c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.61-1.7-3.18-1.72-1.35-.14-2.64.79-3.33.79-.69 0-1.74-.77-2.86-.75-1.47.02-2.83.86-3.59 2.18C.48 10.45 1.63 14.4 3.1 16.56c.73 1.06 1.6 2.24 2.74 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.92-1.08 2.64-2.14.83-1.22 1.18-2.4 1.2-2.46-.03-.01-2.29-.88-2.31-3.49z"/>
+          <path d="M11.03 4.2c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.55 1.31-.56.65-1.05 1.69-.92 2.68.97.08 1.96-.5 2.57-1.23z"/>
+        </svg>
+      </button>
+      <button class="mb-item mb-app" role="menuitem" data-menu="portfolio" aria-haspopup="true" aria-expanded="false">Portfolio</button>
+      <button class="mb-item" role="menuitem" data-menu="file" aria-haspopup="true" aria-expanded="false">File</button>
+      <button class="mb-item" role="menuitem" data-menu="edit" aria-haspopup="true" aria-expanded="false">Edit</button>
+      <button class="mb-item" role="menuitem" data-menu="view" aria-haspopup="true" aria-expanded="false">View</button>
+      <button class="mb-item" role="menuitem" data-menu="window" aria-haspopup="true" aria-expanded="false">Window</button>
+      <button class="mb-item" role="menuitem" data-menu="help" aria-haspopup="true" aria-expanded="false">Help</button>
+    </div>
+
+    <div class="menubar-right">
+      <span class="mb-status mb-battery" id="mb-battery" title="Battery">
+        <span class="mb-batt-pct" id="mb-batt-pct">—</span>
+        <svg class="mb-batt-icon" viewBox="0 0 30 14" aria-hidden="true" focusable="false">
+          <rect class="mb-batt-shell" x="0.75" y="0.75" width="25" height="12.5" rx="3.5"/>
+          <path class="mb-batt-cap" d="M27.4 5.1v3.8c.85-.3 1.35-.95 1.35-1.9s-.5-1.6-1.35-1.9z"/>
+          <rect class="mb-batt-fill" id="mb-batt-fill" x="2.4" y="2.4" width="21.7" height="9.2" rx="2"/>
+          <path class="mb-batt-bolt" id="mb-batt-bolt" d="M14.6 2.4l-4 5.2h2.7l-1 4 4-5.2h-2.7z" hidden/>
+        </svg>
+      </span>
+
+      <span class="mb-status" title="Wi-Fi">
+        <svg class="mb-icon" viewBox="0 0 18 14" aria-hidden="true" focusable="false">
+          <path d="M9 12.6a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+          <path d="M5.4 8.5a5.2 5.2 0 017.2 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <path d="M2.9 5.9a8.8 8.8 0 0112.2 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </span>
+
+      <span class="mb-status" title="Bluetooth">
+        <svg class="mb-icon" viewBox="0 0 12 18" aria-hidden="true" focusable="false">
+          <path d="M5 1v7l4-3.5L5 1zM5 10v7l4-3.5L5 10zM2 5.5l7 6M2 12.5l7-6"
+                fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+
+      <button class="mb-status mb-btn" id="mb-search" title="Search portfolio" aria-label="Search">
+        <svg class="mb-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M10.8 10.8L14.5 14.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <button class="mb-status mb-btn" id="mb-control" title="Toggle theme" aria-label="Toggle theme">
+        <svg class="mb-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M2 4.5h5M11 4.5h3M2 11.5h3M9 11.5h5"
+                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="9" cy="4.5" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="7" cy="11.5" r="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </button>
+
+      <button class="mb-status mb-btn mb-clock" id="mb-clock" title="Date and time">
+        <span id="mb-date"></span>
+        <span id="mb-time"></span>
+      </button>
+    </div>
+  </div>
+
+  <canvas id="bg"></canvas>
+  <div id="cursor" aria-hidden="true"></div>
+  <div id="cursor-ring" aria-hidden="true"></div>
+  <div id="progress" aria-hidden="true"></div>
+
+  <div class="browser" role="application" aria-label="Portfolio browser">
+    <!-- Window chrome -->
+    <div class="browser-chrome">
+      <div class="window-controls" aria-hidden="true">
+        <span class="dot dot-close"></span>
+        <span class="dot dot-min"></span>
+        <span class="dot dot-max"></span>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar" role="tablist" aria-label="Sections">
+        <button class="tab active" role="tab" data-tab="home" aria-selected="true">
+          <span class="tab-icon">🏠</span><span class="tab-label">Home</span>
+        </button>
+        <button class="tab" role="tab" data-tab="about" aria-selected="false">
+          <span class="tab-icon">👋</span><span class="tab-label">About</span>
+        </button>
+        <button class="tab" role="tab" data-tab="skills" aria-selected="false">
+          <span class="tab-icon">💻</span><span class="tab-label">Skills</span>
+        </button>
+        <button class="tab" role="tab" data-tab="projects" aria-selected="false">
+          <span class="tab-icon">🚀</span><span class="tab-label">Projects</span>
+        </button>
+        <button class="tab" role="tab" data-tab="contact" aria-selected="false">
+          <span class="tab-icon">📬</span><span class="tab-label">Contact</span>
+        </button>
+        <button class="tab" role="tab" data-tab="resume" aria-selected="false">
+          <span class="tab-icon">📄</span><span class="tab-label">Resume</span>
+        </button>
+        <button class="tab-new" aria-label="New tab" title="New tab">+</button>
+      </div>
+    </div>
+
+    <!-- Address bar -->
+    <div class="address-bar">
+      <div class="nav-controls" aria-hidden="true">
+        <button class="nav-btn" data-nav="back" title="Back">‹</button>
+        <button class="nav-btn" data-nav="forward" title="Forward">›</button>
+        <button class="nav-btn" data-nav="reload" title="Reload">⟳</button>
+      </div>
+      <div class="url-bar">
+        <span class="lock" aria-hidden="true">🔒</span>
+        <span class="url" id="url-display">portfolio://home</span>
+      </div>
+      <div class="bar-actions" aria-hidden="true">
+        <button class="nav-btn" id="theme-toggle" title="Toggle theme">☀️</button>
+        <button class="nav-btn" title="Star">☆</button>
+        <button class="nav-btn" title="Menu">⋯</button>
+      </div>
+    </div>
+
+    <!-- Content viewport -->
+    <main class="viewport">
+
+      <!-- HOME / SEARCH PAGE -->
+      <section class="panel active" data-panel="home">
+        <div class="search-page">
+          <p class="eyebrow">// portfolio</p>
+          <h1 class="brand">
+            <span class="brand-letter" style="--c:var(--accent-1)">N</span><span
+                  class="brand-letter" style="--c:var(--accent-2)">a</span><span
+                  class="brand-letter" style="--c:var(--accent-3)">m</span><span
+                  class="brand-letter" style="--c:var(--accent-1)">e</span><span
+                  class="brand-letter" style="--c:var(--accent-2)">.</span><span
+                  class="brand-letter" style="--c:var(--accent-3)">d</span><span
+                  class="brand-letter" style="--c:var(--accent-1)">e</span><span
+                  class="brand-letter" style="--c:var(--accent-2)">v</span>
+          </h1>
+          <p class="search-tagline">
+            I build <span id="rotator" class="rotator">reliable software</span>
+          </p>
+
+          <form class="search-box" id="search-form" autocomplete="off">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input
+              type="text"
+              id="search-input"
+              class="search-input"
+              placeholder="Search the portfolio… (try: projects, skills, contact)"
+              aria-label="Search portfolio"
+            />
+            <button type="button" class="search-clear" id="search-clear" aria-label="Clear">✕</button>
+          </form>
+
+          <div class="search-actions">
+            <button type="submit" form="search-form" class="search-btn">Search</button>
+            <button type="button" class="search-btn" id="lucky-btn">I'm Feeling Lucky</button>
+          </div>
+
+          <!-- Quick-link icons to other tabs -->
+          <div class="shortcuts" aria-label="Quick links">
+            <button class="shortcut" data-goto="about">
+              <span class="shortcut-icon">👋</span>
+              <span class="shortcut-label">About</span>
+            </button>
+            <button class="shortcut" data-goto="skills">
+              <span class="shortcut-icon">💻</span>
+              <span class="shortcut-label">Skills</span>
+            </button>
+            <button class="shortcut" data-goto="projects">
+              <span class="shortcut-icon">🚀</span>
+              <span class="shortcut-label">Projects</span>
+            </button>
+            <button class="shortcut" data-goto="contact">
+              <span class="shortcut-icon">📬</span>
+              <span class="shortcut-label">Contact</span>
+            </button>
+            <button class="shortcut" data-goto="resume">
+              <span class="shortcut-icon">📄</span>
+              <span class="shortcut-label">Resume</span>
+            </button>
+            <a class="shortcut" href="https://github.com/your-handle" target="_blank" rel="noopener">
+              <span class="shortcut-icon">⚡</span>
+              <span class="shortcut-label">GitHub</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section class="panel" data-panel="about">
+        <header class="hero">
+          <p class="eyebrow">// about</p>
+          <h1>
+            <span class="line">Hi, I'm <span class="name">Your Name</span>.</span>
+            <span class="line">Software engineer.</span>
+          </h1>
+          <p class="lede">
+            Curious about systems, obsessed with good interfaces, and occasionally
+            dangerous with a compiler. I like building things that are fast,
+            legible, and pleasant to use.
+          </p>
+          <nav class="links" aria-label="Primary">
+            <button class="btn" data-goto="projects">Projects</button>
+            <button class="btn" data-open-resume>View Resume</button>
+            <a href="mailto:you@example.com" class="btn ghost">Email</a>
+            <a href="https://github.com/your-handle" class="btn ghost" target="_blank" rel="noopener">GitHub</a>
+          </nav>
+        </header>
+      </section>
+
+      <!-- SKILLS -->
+      <section class="panel" data-panel="skills">
+        <h2>Skills</h2>
+        <div class="chips">
+          <span class="chip">TypeScript</span>
+          <span class="chip">Python</span>
+          <span class="chip">Go</span>
+          <span class="chip">SQL</span>
+          <span class="chip">Node.js</span>
+          <span class="chip">React</span>
+          <span class="chip">Next.js</span>
+          <span class="chip">FastAPI</span>
+          <span class="chip">PostgreSQL</span>
+          <span class="chip">Redis</span>
+          <span class="chip">Docker</span>
+          <span class="chip">AWS</span>
+          <span class="chip">Terraform</span>
+          <span class="chip">Linux</span>
+          <span class="chip">GitHub Actions</span>
+          <span class="chip">Testing</span>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section class="panel" data-panel="projects">
+        <h2>Projects</h2>
+        <div class="grid">
+          <a class="card" data-tilt href="https://github.com/your-handle/project-one" target="_blank" rel="noopener">
+            <div class="card-inner">
+              <p class="num">01</p>
+              <h3>Project One</h3>
+              <p>One-line description of what it does and the problem it solves.</p>
+              <p class="meta">TypeScript · Postgres</p>
+            </div>
+          </a>
+          <a class="card" data-tilt href="https://github.com/your-handle/project-two" target="_blank" rel="noopener">
+            <div class="card-inner">
+              <p class="num">02</p>
+              <h3>Project Two</h3>
+              <p>One-line description. What was hard, what you learned.</p>
+              <p class="meta">Python · FastAPI</p>
+            </div>
+          </a>
+          <a class="card" data-tilt href="https://github.com/your-handle/project-three" target="_blank" rel="noopener">
+            <div class="card-inner">
+              <p class="num">03</p>
+              <h3>Project Three</h3>
+              <p>One-line description. Impact or scale if relevant.</p>
+              <p class="meta">Go · gRPC</p>
+            </div>
+          </a>
+          <a class="card" data-tilt href="https://github.com/your-handle" target="_blank" rel="noopener">
+            <div class="card-inner">
+              <p class="num">→</p>
+              <h3>More on GitHub</h3>
+              <p>Browse the rest of what I've been building.</p>
+              <p class="meta">github.com/your-handle</p>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="panel" data-panel="contact">
+        <h2>Find me</h2>
+        <ul class="find">
+          <li><a href="https://github.com/your-handle" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/your-handle" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://twitter.com/your-handle" target="_blank" rel="noopener">Twitter / X</a></li>
+          <li><a href="https://dev.to/your-handle" target="_blank" rel="noopener">DEV</a></li>
+          <li><a href="mailto:you@example.com">Email</a></li>
+        </ul>
+      </section>
+
+      <!-- RESUME placeholder panel (opens modal) -->
+      <section class="panel" data-panel="resume">
+        <h2>Resume</h2>
+        <p class="lede">Open the full resume in a new window or download the source.</p>
+        <nav class="links">
+          <button class="btn" data-open-resume>Open Resume</button>
+          <a href="assets/resume/resume.tex" download class="btn ghost">Download .tex</a>
+        </nav>
+      </section>
+
+      <footer>
+        <p>&copy; <span id="year"></span> Your Name · Built with too much coffee.</p>
+      </footer>
+    </main>
+
+    <div class="resize-handle" aria-hidden="true" title="Drag to resize"></div>
+  </div>
+
+  <!-- Resume modal -->
+  <div id="resume-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="resume-title">
+    <div class="modal-backdrop" data-close-resume></div>
+    <div class="modal-box" role="document">
+      <header class="modal-head">
+        <h3 id="resume-title">Resume</h3>
+        <div class="modal-actions">
+          <button type="button" class="btn small ghost" data-print-resume>Print / Save PDF</button>
+          <a href="assets/resume/resume.tex" download class="btn small ghost">Download .tex</a>
+          <button type="button" class="btn small ghost" data-close-resume aria-label="Close">Close ✕</button>
+        </div>
+      </header>
+      <div class="modal-body">
+        <article id="resume-render" class="resume" aria-live="polite"></article>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="assets/js/script.js?v=4"></script>
+  <script src="assets/js/resume.js?v=2"></script>
+</body>
+</html>

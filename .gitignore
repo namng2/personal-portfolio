@@ -1,3 +1,44 @@
-node_modules
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+Icon?
+
+# Editor / IDE
+.vscode/
+.idea/
+.windsurf/
+.claude/
+*.swp
+*.swo
+*~
+
+# Node / build artifacts
+node_modules/
+dist/
+build/
+.cache/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment / secrets
 .env
-.vercel
+.env.*
+*.pem
+*.key
+secrets.json
+
+# LaTeX build artifacts (resume.tex etc.)
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# OS/system junk
+Thumbs.db
