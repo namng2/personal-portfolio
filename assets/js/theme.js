@@ -195,6 +195,39 @@
       section("Theme", grid)
     );
     document.body.append(probe, panel);
+
+    wireArrowKeys(modeButtons, 1, (i) => {
+      mode = MODES[i][0];
+      apply();
+    });
+    wireArrowKeys(paletteCards, 3, (i) => {
+      palette = PALETTES[i];
+      apply();
+    });
+  }
+
+  // role="radio" promises arrow-key movement, so honour it. cols > 1 means the
+  // group is a grid and up/down step a whole row; otherwise every arrow moves
+  // by one. Movement clamps at the ends rather than wrapping, which is what
+  // the grid case wants.
+  function wireArrowKeys(items, cols, pick) {
+    items.forEach((el, i) => {
+      el.addEventListener("keydown", (e) => {
+        const last = items.length - 1;
+        let next;
+        if (e.key === "ArrowRight") next = i + 1;
+        else if (e.key === "ArrowLeft") next = i - 1;
+        else if (e.key === "ArrowDown") next = cols > 1 ? i + cols : i + 1;
+        else if (e.key === "ArrowUp") next = cols > 1 ? i - cols : i - 1;
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = last;
+        else return;
+        e.preventDefault();
+        if (next < 0 || next > last) return;
+        items[next].focus();
+        pick(next);
+      });
+    });
   }
 
   function section(title, content) {
@@ -212,15 +245,19 @@
   function syncUI() {
     if (!panel) return;
     const shown = resolvedMode();
+    // Roving tabindex: a radiogroup is one tab stop, and arrow keys move
+    // within it. Without this the panel is 12 separate stops.
     modeButtons.forEach((b) => {
       const on = b.dataset.mode === mode;
       b.classList.toggle("is-on", on);
       b.setAttribute("aria-checked", String(on));
+      b.tabIndex = on ? 0 : -1;
     });
     paletteCards.forEach((c) => {
       const on = c.dataset.palette === palette;
       c.classList.toggle("is-on", on);
       c.setAttribute("aria-checked", String(on));
+      c.tabIndex = on ? 0 : -1;
       c._paint(readPalette(c.dataset.palette, shown));
     });
     const t = document.getElementById("theme-toggle");
@@ -237,6 +274,9 @@
     syncUI();
     panel.hidden = false;
     trigger()?.setAttribute("aria-expanded", "true");
+    // Focus moves immediately; only the open transition waits for a frame.
+    // Tying focus to rAF would drop it whenever rAF is throttled.
+    panel.querySelector('.tp-seg[aria-checked="true"]')?.focus();
     requestAnimationFrame(() => panel.classList.add("is-open"));
     document.addEventListener("pointerdown", onOutside, true);
     document.addEventListener("keydown", onKey, true);
@@ -246,6 +286,8 @@
     if (!panel || panel.hidden) return;
     panel.classList.remove("is-open");
     trigger()?.setAttribute("aria-expanded", "false");
+    // Hand focus back rather than dropping it on <body>.
+    if (panel.contains(document.activeElement)) trigger()?.focus();
     document.removeEventListener("pointerdown", onOutside, true);
     document.removeEventListener("keydown", onKey, true);
     setTimeout(() => {

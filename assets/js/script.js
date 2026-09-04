@@ -567,7 +567,7 @@ function particleColor(alpha) {
   const lucky = document.getElementById("lucky-btn");
   const box = form;
 
-  const targets = ["home", "about", "skills", "projects", "contact", "resume"];
+  const targets = ["home", "about", "skills", "projects", "map", "contact", "resume"];
 
   function go(query) {
     const q = (query || "").trim().toLowerCase();
@@ -578,6 +578,7 @@ function particleColor(alpha) {
     if (/(work|exp|me|bio)/.test(q)) return window.__activateTab("about");
     if (/(stack|tech|lang)/.test(q)) return window.__activateTab("skills");
     if (/(proj|build|portfolio|github)/.test(q)) return window.__activateTab("projects");
+    if (/(photo|pic|shot|place|travel|camera)/.test(q)) return window.__activateTab("map");
     if (/(mail|email|reach|find|social)/.test(q)) return window.__activateTab("contact");
     if (/(cv|resume|hire)/.test(q)) return window.__activateTab("resume");
     // Fallback: projects
@@ -597,8 +598,8 @@ function particleColor(alpha) {
     go(input.value);
   });
   lucky?.addEventListener("click", () => {
-    const pick = targets.filter((t) => t !== "home")[Math.floor(Math.random() * (targets.length - 1))];
-    window.__activateTab(pick);
+    const pool = targets.filter((t) => t !== "home");
+    window.__activateTab(pool[Math.floor(Math.random() * pool.length)]);
   });
 })();
 
