@@ -84,9 +84,14 @@ public, so a key would be readable in source. Each mode is two tile layers
 not Leaflet's usual `{z}/{x}/{y}`.
 
 Publishing a photo is: file into `assets/photos/`, entry into
-`assets/data/photos.json`, push. The Map tab's **Add a photo…** button writes
-the entry (reading EXIF GPS when the photo has it). Nothing uploads at
-runtime — the site is static, so there is nowhere for an upload to go.
+`assets/data/photos.json`, push. A manifest `file` may also be a full
+`https://` URL if the photo is hosted elsewhere — add that host to `img-src`
+in the CSP when you do.
+
+**The Add a photo… composer is author-only**: `photo-map.js` removes it from
+the DOM unless the page is served from localhost. It never could publish for
+a visitor (it only prints JSON on screen, and a static host has no write
+endpoint), but leaving the button live reads as "anyone can upload".
 
 - **Verify a tile provider by looking at the pixels, not the status code.**
   CARTO's basemaps were the first choice and returned HTTP 200 `image/png` —

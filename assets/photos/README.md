@@ -2,6 +2,18 @@
 
 Drop image files here, then add a matching entry to `../data/photos.json`.
 
+`file` can be either a name in this folder or a full `https://` URL, so photos
+can live in the repo or on an image host:
+
+```json
+{ "file": "ocean-beach.jpg",                    "lat": 37.76, "lng": -122.51 }
+{ "file": "https://res.cloudinary.com/…/x.jpg", "lat": 37.76, "lng": -122.51 }
+```
+
+A remote host must also be added to `img-src` in the CSP in `index.html`, or
+the browser silently drops the image. Other schemes (`data:`, `javascript:`)
+are refused.
+
 The **Add a photo…** button on the Map tab writes that entry for you: it reads
 GPS out of the photo's EXIF where present (otherwise you click the map), and
 prints the JSON to paste.

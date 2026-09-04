@@ -106,8 +106,19 @@
     render();
   }
 
-  const valid = (p) =>
-    p && typeof p.file === "string" && isFinite(p.lat) && isFinite(p.lng);
+  // "file" is either a name inside assets/photos/ or a full https:// URL, so
+  // photos can live in the repo or on an image host without changing anything
+  // here. A host used this way must also be added to img-src in the CSP in
+  // index.html, or the browser drops the image with no visible error.
+  function photoSrc(p) {
+    const f = String(p.file || "").trim();
+    if (!f) return "";
+    if (/^https?:\/\//i.test(f)) return f;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(f)) return ""; // data:, javascript:, … — refuse
+    return PHOTO_DIR + f.replace(/^\/+/, "");
+  }
+
+  const valid = (p) => p && photoSrc(p) && isFinite(p.lat) && isFinite(p.lng);
 
   function render() {
     markerGroup.clearLayers();
@@ -141,7 +152,7 @@
       className: "pm-pin-wrap",
       html:
         '<span class="pm-pin">' +
-        `<img src="${escAttr(PHOTO_DIR + p.file)}" alt="${escAttr(p.title || "")}" loading="lazy">` +
+        `<img src="${escAttr(photoSrc(p))}" alt="${escAttr(p.title || "")}" loading="lazy">` +
         "</span>",
       iconSize: [64, 72],
       iconAnchor: [32, 72],
@@ -155,7 +166,7 @@
     const meta = [p.place, formatDate(p.date)].filter(Boolean).map(esc).join(" · ");
     if (meta) bits.push(`<p class="pm-pop-meta">${meta}</p>`);
     return (
-      `<img class="pm-pop-img" src="${escAttr(PHOTO_DIR + p.file)}" alt="${escAttr(p.title || "")}">` +
+      `<img class="pm-pop-img" src="${escAttr(photoSrc(p))}" alt="${escAttr(p.title || "")}">` +
       bits.join("")
     );
   }
@@ -198,6 +209,22 @@
   if (panel.classList.contains("active")) build();
 
   // ---- composer -----------------------------------------------------------
+  // Author-only. Nothing here could ever publish for a visitor — the composer
+  // just prints JSON on screen, and a static host has no endpoint to write to
+  // — but leaving the button on the live site reads as "anyone can upload".
+  // So on anything other than a local dev server the markup is removed
+  // outright rather than hidden, which also keeps it out of the tab order and
+  // out of screen readers.
+  const IS_LOCAL =
+    location.protocol === "file:" ||
+    /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(location.hostname) ||
+    location.hostname.endsWith(".local");
+
+  if (!IS_LOCAL) {
+    document.getElementById("pm-composer")?.remove();
+    document.getElementById("pm-add")?.remove();
+    return;
+  }
 
   const composer = document.getElementById("pm-composer");
   const fileInput = document.getElementById("pm-file");
