@@ -108,4 +108,54 @@ endpoint), but leaving the button live reads as "anyone can upload".
 - Wallpaper tint is dark-mode only; light mode sets it `transparent`.
 - Verify UI changes in a browser before claiming they work.
 
+## Running more than one agent at once
+
+Not needed at this size — almost every open item edits `index.html`, so two
+agents would collide on the same file. Kept here because the rules are the
+same wherever this pattern gets used next.
+
+**Before splitting anything**, list the work and the files each item touches.
+If the file sets overlap, sequence it instead. Overlapping files are the only
+thing that reliably breaks parallel agents; ticket count is irrelevant.
+
+**Freeze the interface first.** One session writes only the contract — type
+definitions, function signatures, schema, file layout — and commits it. Then
+fan out. Skip this and each agent invents its own shape of the same thing, and
+integration turns into a rewrite.
+
+**One worktree per agent**, so they cannot touch each other's checkout:
+
+```
+git worktree add ../proj-api -b feat/api
+git worktree list          # see them
+git worktree remove ../proj-api
+```
+
+**Give each lane an owner and an escape hatch.** While parallel work is in
+flight, record it here, e.g.:
+
+```
+feat/api   owns src/api/**, migrations/**
+feat/web   owns src/components/**, src/styles/**
+```
+
+> If you need a change outside your lane: **do not make it.** Append the
+> request to `HANDOFF.md`, commit, and carry on without it.
+
+That rule is the important one. Without it an agent needing one line in
+someone else's file will just take it, and you find out at merge.
+
+**Markup and the script that drives it are one lane, never two.** Changing
+`data-`/ARIA attributes in `index.html` without changing the module that reads
+them leaves the two out of sync — the markup promises behaviour the JS never
+implements. If a change spans both, it is a single unit of work.
+
+**Merge short and often**, foundational lane first, and rebase the others onto
+it before they drift. Each lane proves its own work in a browser before review;
+otherwise you inherit several debugging sessions at once.
+
+**Ceiling: two or three concurrent**, because the constraint is one human
+reading the diffs, not tooling. Never parallelise wide refactors, dependency
+upgrades, or anything touching shared config.
+
 Open work: see [TODO.md](TODO.md).
