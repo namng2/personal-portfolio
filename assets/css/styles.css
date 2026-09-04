@@ -1229,8 +1229,13 @@ footer {
   z-index: 0;
 }
 .pm-empty {
+  /* Centred, not pinned to the bottom: down there it sits on top of Leaflet's
+     attribution, which has to stay readable. */
   position: absolute;
-  inset: auto 1rem 1rem;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(100% - 2rem);
   margin: 0;
   padding: 0.6rem 0.9rem;
   border-radius: 10px;

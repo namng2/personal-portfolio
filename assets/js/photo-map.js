@@ -50,6 +50,13 @@
   // tile instead of requesting 404s, so zooming in stays smooth.
   const TILE_OPTS = { attribution: ATTRIB, maxNativeZoom: 16, maxZoom: 19 };
 
+  // Declared up here, not down by the composer, because build() consults it
+  // and build() can run before that point.
+  const IS_LOCAL =
+    location.protocol === "file:" ||
+    /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(location.hostname) ||
+    location.hostname.endsWith(".local");
+
   let map = null;
   let baseLayer = null;
   let labelLayer = null;
@@ -77,6 +84,9 @@
     labelLayer = L.tileLayer(set.labels, { ...TILE_OPTS, attribution: "" }).addTo(map);
 
     markerGroup = L.layerGroup().addTo(map);
+    // Composer-only, and gated on IS_LOCAL: onMapClick closes over `composer`,
+    // which is never initialised on the deployed site.
+    if (IS_LOCAL) map.on("click", onMapClick);
     load();
   }
 
@@ -203,7 +213,7 @@
   new MutationObserver(() => {
     if (!panel.classList.contains("active")) return;
     build();
-    requestAnimationFrame(() => map.invalidateSize());
+    requestAnimationFrame(() => map?.invalidateSize());
   }).observe(panel, { attributes: true, attributeFilter: ["class"] });
 
   if (panel.classList.contains("active")) build();
@@ -215,11 +225,6 @@
   // So on anything other than a local dev server the markup is removed
   // outright rather than hidden, which also keeps it out of the tab order and
   // out of screen readers.
-  const IS_LOCAL =
-    location.protocol === "file:" ||
-    /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(location.hostname) ||
-    location.hostname.endsWith(".local");
-
   if (!IS_LOCAL) {
     document.getElementById("pm-composer")?.remove();
     document.getElementById("pm-add")?.remove();
@@ -308,11 +313,6 @@
     placeDraft(draft.lat, draft.lng, false);
     emit();
   }
-  const wire = setInterval(() => {
-    if (!map) return;
-    map.on("click", onMapClick);
-    clearInterval(wire);
-  }, 200);
 
   function emit() {
     if (!out) return;
