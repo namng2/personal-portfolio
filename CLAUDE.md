@@ -22,11 +22,12 @@ assets/photos/          the photo files themselves
 assets/js/script.js     particles, cursor, tabs, window drag/resize, menu bar
 assets/js/resume.js     fetches + parses resume.tex into the modal
 assets/resume/resume.tex  the resume content rendered into the modal
-assets/resume/resume.pdf  the file the "Download PDF" buttons hand out
+assets/resume/resume.pdf  archival copy; the current UI prints the rendered resume
 ```
 
-Keep the two in sync — `.tex` is what visitors *read*, `.pdf` is what they
-*download*, and nothing regenerates one from the other.
+Keep the two in sync if the PDF is ever linked again. The current UI renders
+`.tex` and uses the browser's Print / Save PDF dialog; nothing regenerates the
+archival PDF from the LaTeX source.
 
 ## Traps that have already cost time — read before editing
 

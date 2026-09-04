@@ -275,31 +275,82 @@ function particleColor(alpha) {
 // Browser tab switching + address bar
 // --------------------------------------------------------------------------
 (function tabs() {
+  const tabBar = document.querySelector(".tab-bar");
   const tabs = document.querySelectorAll(".tab[data-tab]");
   const panels = document.querySelectorAll(".panel[data-panel]");
   const urlDisplay = document.getElementById("url-display");
+  const backButton = document.querySelector('[data-nav="back"]');
+  const forwardButton = document.querySelector('[data-nav="forward"]');
+  const visited = ["home"];
+  let visitIndex = 0;
 
-  function activate(name) {
-    // Resume tab opens the modal instead of swapping panels
-    if (name === "resume") {
-      const opener = document.querySelector("[data-open-resume]");
-      if (opener) opener.click();
-      return;
-    }
+  function syncHistoryButtons() {
+    if (backButton) backButton.disabled = visitIndex === 0;
+    if (forwardButton) forwardButton.disabled = visitIndex === visited.length - 1;
+  }
+
+  function activate(name, options = {}) {
+    const target = Array.from(tabs).find((tab) => tab.dataset.tab === name);
+    if (!target) return;
+    const record = options.record !== false;
+
     tabs.forEach((t) => {
       const on = t.dataset.tab === name;
       t.classList.toggle("active", on);
       t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
     });
     panels.forEach((p) => {
-      p.classList.toggle("active", p.dataset.panel === name);
+      const on = p.dataset.panel === name;
+      p.classList.toggle("active", on);
+      p.hidden = !on;
     });
     if (urlDisplay) urlDisplay.textContent = "portfolio://" + name;
-    document.querySelector(".viewport")?.scrollTo({ top: 0, behavior: "instant" });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.querySelector(".viewport")?.scrollTo({ top: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+
+    if (record && visited[visitIndex] !== name) {
+      visited.splice(visitIndex + 1);
+      visited.push(name);
+      visitIndex = visited.length - 1;
+    }
+    syncHistoryButtons();
+
+    // The Resume tab is still a real tab: select its panel first, then open the
+    // full document. Closing the modal now leaves a coherent Resume screen.
+    if (name === "resume" && options.openResume !== false) {
+      requestAnimationFrame(() => {
+        document.querySelector('#panel-resume [data-open-resume]')?.click();
+      });
+    }
   }
 
   tabs.forEach((t) => t.addEventListener("click", () => activate(t.dataset.tab)));
+
+  tabBar?.addEventListener("keydown", (e) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+    const ordered = Array.from(tabBar.querySelectorAll(".tab[data-tab]"));
+    const current = ordered.indexOf(e.target.closest(".tab[data-tab]"));
+    if (current === -1) return;
+    e.preventDefault();
+    let next = current;
+    if (e.key === "ArrowLeft") next = (current - 1 + ordered.length) % ordered.length;
+    if (e.key === "ArrowRight") next = (current + 1) % ordered.length;
+    if (e.key === "Home") next = 0;
+    if (e.key === "End") next = ordered.length - 1;
+    ordered[next].focus();
+    activate(ordered[next].dataset.tab);
+  });
+
+  function moveHistory(direction) {
+    const next = visitIndex + direction;
+    if (next < 0 || next >= visited.length) return;
+    visitIndex = next;
+    activate(visited[visitIndex], { record: false });
+  }
+  backButton?.addEventListener("click", () => moveHistory(-1));
+  forwardButton?.addEventListener("click", () => moveHistory(1));
+  syncHistoryButtons();
 
   // Any element with data-goto navigates to that tab
   document.addEventListener("click", (e) => {
@@ -699,7 +750,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       { heading: "Appearance" },
       ...appearanceItems,
       { sep: true },
-      { label: "App Store…", run: () => window.open("https://github.com/your-handle", "_blank", "noopener") },
+      { label: "GitHub Profile…", run: () => window.open("https://github.com/namng2", "_blank", "noopener") },
       { sep: true },
       { label: "Restart…", run: () => location.reload() },
     ],
@@ -737,7 +788,9 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       { label: "About", key: "⌘2", run: () => go("about") },
       { label: "Skills", key: "⌘3", run: () => go("skills") },
       { label: "Projects", key: "⌘4", run: () => go("projects") },
-      { label: "Contact", key: "⌘5", run: () => go("contact") },
+      { label: "Photo Map", key: "⌘5", run: () => go("map") },
+      { label: "Contact", key: "⌘6", run: () => go("contact") },
+      { label: "Resume", key: "⌘7", run: () => go("resume") },
       { sep: true },
       { heading: "Appearance" },
       ...appearanceItems,
@@ -751,23 +804,26 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
     help: [
       { label: "Portfolio Help", run: () => go("about") },
       { sep: true },
-      { label: "GitHub", run: () => window.open("https://github.com/your-handle", "_blank", "noopener") },
-      { label: "Email", run: () => window.open("mailto:you@example.com", "_blank", "noopener") },
+      { label: "GitHub", run: () => window.open("https://github.com/namng2", "_blank", "noopener") },
+      { label: "Email", run: () => { location.href = "mailto:namhnguyen041@gmail.com"; } },
     ],
   };
 
   let openEl = null;
   let panel = null;
+  const menuButtons = Array.from(bar.querySelectorAll(".mb-item[data-menu]"));
 
-  function close() {
+  function close(restoreFocus = false) {
+    const owner = openEl;
     panel?.remove();
     panel = null;
     openEl?.classList.remove("open");
     openEl?.setAttribute("aria-expanded", "false");
     openEl = null;
+    if (restoreFocus) owner?.focus();
   }
 
-  function openMenu(btn) {
+  function openMenu(btn, focusFirst = false) {
     close();
     const items = MENUS[btn.dataset.menu];
     if (!items) return;
@@ -791,6 +847,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
 
       const b = document.createElement("button");
       b.type = "button";
+      b.tabIndex = -1;
       b.setAttribute("role", item.check ? "menuitemradio" : "menuitem");
       b.disabled = !!item.disabled;
 
@@ -814,10 +871,34 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
         b.appendChild(k);
       }
       if (item.run) {
-        b.addEventListener("click", () => { close(); item.run(); });
+        b.addEventListener("click", () => {
+          const owner = openEl;
+          close();
+          owner?.focus();
+          item.run();
+        });
       }
       panel.appendChild(b);
     }
+
+    panel.addEventListener("keydown", (e) => {
+      const items = Array.from(panel.querySelectorAll("button:not(:disabled)"));
+      const current = items.indexOf(document.activeElement);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        close(true);
+        return;
+      }
+      if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key) || !items.length) return;
+      e.preventDefault();
+      let next = current;
+      if (e.key === "ArrowDown") next = (current + 1) % items.length;
+      if (e.key === "ArrowUp") next = (current - 1 + items.length) % items.length;
+      if (e.key === "Home") next = 0;
+      if (e.key === "End") next = items.length - 1;
+      items[next].focus();
+    });
 
     document.body.appendChild(panel);
     // Keep the panel on screen when a right-hand menu would overflow
@@ -828,12 +909,29 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
     openEl = btn;
     btn.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
+    if (focusFirst) panel.querySelector("button:not(:disabled)")?.focus();
   }
 
-  bar.querySelectorAll(".mb-item[data-menu]").forEach((btn) => {
+  menuButtons.forEach((btn, index) => {
+    btn.tabIndex = index === 0 ? 0 : -1;
+    btn.addEventListener("focus", () => {
+      menuButtons.forEach((item) => { item.tabIndex = item === btn ? 0 : -1; });
+    });
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       openEl === btn ? close() : openMenu(btn);
+    });
+    btn.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openMenu(btn, true);
+        return;
+      }
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      close();
+      const direction = e.key === "ArrowRight" ? 1 : -1;
+      menuButtons[(index + direction + menuButtons.length) % menuButtons.length].focus();
     });
     // Once a menu is open, hovering a sibling switches to it (macOS behavior)
     btn.addEventListener("mouseenter", () => {
@@ -843,7 +941,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
 
   document.addEventListener("click", () => close());
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") close(true);
   });
   window.addEventListener("resize", close);
 

@@ -1,23 +1,6 @@
 # TODO
 
-## 1. Replace template placeholders — highest value, quick
-
-`index.html` still ships with the starter template's fake identity. Real values
-are in `assets/resume/resume.tex`.
-
-| Placeholder | Should be |
-|---|---|
-| `Your Name` (incl. `<title>` and footer) | Nam Nguyen |
-| `you@example.com` | namhnguyen041@gmail.com |
-| `github.com/your-handle` | the real GitHub URL |
-| `linkedin.com/in/your-handle` | linkedin.com/in/namnguyenh1 |
-| Project One / Two / Three cards | real projects from the resume |
-| Skills chips | still the old stack; resume now lists a different one |
-
-Also in `assets/js/script.js` — the Apple, Help and Email menu items point at
-`your-handle` / `you@example.com`.
-
-## 2. Fix content errors in the resume
+## 1. Fix content errors in the resume
 
 These came from the source PDF and were transcribed faithfully rather than
 silently changed:
@@ -27,6 +10,12 @@ silently changed:
   Figma, AWS EC2). They don't match the title or its `Tableau, Linux` tags.
 - **"NVDIA"** is presumably meant to be **"NVIDIA"**.
 - Its start date `October 2026 – Present` is in the future.
+
+## 2. Publish the first Photo Map entry
+
+The map is intentionally empty until a real photograph, date, and location are
+added. Follow `assets/photos/README.md`; do not invent a location from the
+wallpaper alone.
 
 ## 3. Smaller polish
 
@@ -39,6 +28,8 @@ silently changed:
 - **`RING_EASE`** in `script.js` eases per frame, so the cursor ring converges
   about twice as fast on a 120 Hz display as on 60 Hz. Normalise to elapsed time
   if it looks inconsistent across monitors.
+- **GitHub repository website URL** still points to the retired Vercel preview.
+  Change it in the repository's About settings to the GitHub Pages URL.
 - **Clickjacking** isn't defended: `frame-ancestors` only works as an HTTP
   header and GitHub Pages can't set one. Low risk; noted for completeness.
 
@@ -47,6 +38,8 @@ silently changed:
 Menu bar, wallpaper, window centring/resizing, slim scrollbars, resume content
 update, resume layout fixes, GitHub Pages deploy, security hardening (SRI, CSP,
 `noopener`, URL allowlist), Safari lookbehind fix, SVG charging-bolt fix,
-swapped the `.tex` download + print button for a PDF download, dropped the
-phone number and citizenship line from the resume, resume indent hierarchy,
-9-palette theme system with Auto/Light/Dark and a Control Centre popover.
+browser Print / Save PDF flow, dropped the phone number and citizenship line
+from the resume, resume indent hierarchy, 9-palette theme system with
+Auto/Light/Dark and a Control Centre popover, real identity/contact links,
+featured project cards, grouped skills, working browser history controls, and
+keyboard-safe tabs, menus, and resume modal.

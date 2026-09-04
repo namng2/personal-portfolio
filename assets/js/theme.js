@@ -264,7 +264,10 @@
     if (t) {
       t.textContent = shown === "light" ? "🌙" : "☀️";
       t.title = shown === "light" ? "Switch to dark mode" : "Switch to light mode";
+      t.setAttribute("aria-label", t.title);
     }
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute("content", getComputedStyle(document.body).backgroundColor);
   }
 
   const trigger = () => document.getElementById("mb-control");

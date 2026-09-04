@@ -15,9 +15,19 @@
   // Kept as a promise rather than a boolean so printing can await the same
   // fetch the modal started, instead of racing it and printing a blank page.
   let loadPromise = null;
+  let returnFocus = null;
+
+  function focusableElements() {
+    return Array.from(
+      modal.querySelectorAll('a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])')
+    ).filter((el) => el.getClientRects().length > 0);
+  }
 
   function openModal(e) {
     if (e) e.preventDefault();
+    if (!modal.classList.contains("open")) {
+      returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -26,12 +36,16 @@
     } else {
       animateIn();
     }
+    requestAnimationFrame(() => focusableElements()[0]?.focus());
   }
 
   function closeModal() {
+    if (!modal.classList.contains("open")) return;
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
+    returnFocus?.focus();
+    returnFocus = null;
   }
 
   function animateIn() {
@@ -56,7 +70,7 @@
     } catch (err) {
       body.innerHTML = `
         <div class="r-error">
-          <h3>Couldn't load resume.tex</h3>
+          <h3>Couldn't load the resume</h3>
           <p>If you opened <code>index.html</code> directly via <code>file://</code>, the browser blocks the fetch.
           Run a local server in this folder:</p>
           <pre><code>python3 -m http.server 8000</code></pre>
@@ -110,7 +124,24 @@
   closers.forEach((b) => b.addEventListener("click", closeModal));
   printers.forEach((b) => b.addEventListener("click", printResume));
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
+    if (!modal.classList.contains("open")) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeModal();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const focusable = focusableElements();
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   });
 
   // ------------------------------------------------------------------------
@@ -538,7 +569,8 @@
       const full = safeUrl(raw);
       // Refused scheme: keep the label, drop the link.
       if (!full) return text;
-      return `<a href="${escapeAttr(full)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+      const external = /^https?:\/\//i.test(full) ? ' target="_blank" rel="noopener noreferrer"' : "";
+      return `<a href="${escapeAttr(full)}"${external}>${text}</a>`;
     }
     if (name === "url") {
       const raw = args[0] || "";
