@@ -1320,12 +1320,11 @@ footer {
   border-radius: 14px;
   border: 1px solid var(--rule);
   background: var(--card);
-  overflow: hidden;
-  /* Keep MapLibre's canvas and controls inside the portfolio window. */
+  /* Leaflet panes stack above the browser chrome without this. */
   z-index: 0;
 }
 .pm-empty {
-  /* Centred, not pinned to the bottom: down there it sits on top of MapLibre's
+  /* Centred, not pinned to the bottom: down there it sits on top of Leaflet's
      attribution, which has to stay readable. */
   position: absolute;
   left: 50%;
@@ -1347,35 +1346,10 @@ footer {
 .pm-bar .btn { margin-left: auto; }
 
 /* Thumbnail pin: rounded photo with a pointer beneath, like Photos on a map. */
-.pm-pin-wrap {
-  appearance: none;
-  position: relative;
-  display: block;
-  width: 64px;
-  height: 72px;
-  padding: 0;
-  background: none;
-  border: 0;
-  cursor: inherit;
-}
-.pm-pin-wrap::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  bottom: 3px;
-  width: 12px;
-  height: 12px;
-  background: #fff;
-  transform: translateX(-50%) rotate(45deg);
-  border-radius: 2px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+.pm-pin-wrap { background: none; border: 0; }
 .pm-pin {
   display: block;
   position: relative;
-  z-index: 1;
-  box-sizing: border-box;
   width: 64px;
   height: 64px;
   border-radius: 12px;
@@ -1386,221 +1360,78 @@ footer {
   transition: transform 0.15s ease;
 }
 .pm-pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pm-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 2px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
 .pm-pin-wrap:hover .pm-pin { transform: translateY(-3px) scale(1.04); }
 
 /* Zoomed out, pins collapse to dots — eleven 64px photographs at overview zoom
-   hide the map they are supposed to be sitting on. photo-map.js toggles .pm-far
-   on the container at THUMB_ZOOM. */
+   hide the map they are meant to sit on. photo-map.js toggles .pm-far at
+   THUMB_ZOOM. Markers are bottom-anchored, so the dot has to sit at the bottom
+   of the wrapper or every pin floats above its actual coordinate. */
+.pm-far .pm-pin-wrap { display: flex; align-items: flex-end; justify-content: center; }
 .pm-far .pm-pin {
   width: 16px;
   height: 16px;
+  margin: 0;
   border-width: 2px;
   border-radius: 50%;
   background: var(--accent-1);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
-.pm-far .pm-pin img { opacity: 0; }
+.pm-far .pm-pin img,
 .pm-far .pm-pin::after { opacity: 0; }
 .pm-far .pm-pin-wrap:hover .pm-pin { transform: scale(1.25); }
-/* Markers are bottom-anchored, so whatever sits at the bottom of the wrapper
-   lands on the coordinate. The wrapper keeps its full height either way, so the
-   dot has to be pushed down to it — otherwise every pin floats above its
-   location by the difference between the dot and the thumbnail. */
-.pm-far .pm-pin-wrap {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-.pm-far .pm-pin { margin: 0; }
-.pm-pin img { transition: opacity 0.15s ease; }
-.pm-pin::after { transition: opacity 0.15s ease; }
+.pm-pin img, .pm-pin::after { transition: opacity 0.15s ease; }
 .pm-pin {
   transition: width 0.18s ease, height 0.18s ease, border-radius 0.18s ease,
-    background 0.18s ease, margin 0.18s ease, transform 0.15s ease;
-}
-.pm-pin-wrap:focus-visible .pm-pin {
-  outline: 2px solid var(--accent-1);
-  outline-offset: 3px;
+    background 0.18s ease, transform 0.15s ease;
 }
 .pm-pin-draft {
   border-color: var(--accent-1);
   background: var(--grad);
 }
-.pm-pin-wrap.is-draft::after { background: var(--accent-1); }
+.pm-pin-draft::after { background: var(--accent-1); }
 
 .pm-popup .maplibregl-popup-content {
-  min-width: 220px;
-  padding: 0.35rem 0.55rem;
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--rule);
   border-radius: 12px;
+  padding: 0.7rem 0.8rem;
 }
-.pm-popup .maplibregl-popup-tip { border-color: transparent; }
-.pm-popup[class*="maplibregl-popup-anchor-top"] .maplibregl-popup-tip {
-  border-bottom-color: var(--surface);
-}
-.pm-popup[class*="maplibregl-popup-anchor-bottom"] .maplibregl-popup-tip {
-  border-top-color: var(--surface);
-}
-.pm-popup[class*="maplibregl-popup-anchor-left"] .maplibregl-popup-tip {
-  border-right-color: var(--surface);
-}
-.pm-popup[class*="maplibregl-popup-anchor-right"] .maplibregl-popup-tip {
-  border-left-color: var(--surface);
-}
-.pm-popup .maplibregl-popup-close-button {
-  color: var(--fg);
-  padding: 0.25rem 0.45rem;
-  font-size: 1.1rem;
-  cursor: inherit;
-}
-.pm-popup .maplibregl-popup-close-button:hover { background: var(--hover-tint); }
-.pm-pop-img {
-  width: 100%;
-  height: clamp(76px, 10cqh, 110px);
-  border-radius: 8px;
-  object-fit: cover;
-  display: block;
-}
-.pm-pop-title { margin: 0.35rem 0 0.1rem; font-size: 0.88rem; }
-.pm-pop-meta { margin: 0; color: var(--muted); font-size: 0.74rem; line-height: 1.25; }
-
-/* Popup image doubles as the button that opens the full-size viewer. */
-.pm-pop-open {
-  display: block;
-  position: relative;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  background: none;
-  cursor: inherit;
-}
-.pm-pop-zoom {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 0.6rem 0.5rem 0.4rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #fff;
-  text-align: center;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-.pm-pop-open:hover .pm-pop-zoom,
-.pm-pop-open:focus-visible .pm-pop-zoom { opacity: 1; }
-
-/* Full-size viewer. Fixed to the window, above the menu bar and the map. */
-.pm-box {
-  position: fixed;
-  inset: 0;
-  z-index: 11000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.92);
-  padding: 3.5rem 1rem 4rem;
-}
-.pm-box[hidden] { display: none; }
-.pm-box-stage {
-  max-width: 100%;
-  max-height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: auto;
-}
-.pm-box-img {
-  max-width: 100%;
-  max-height: calc(100vh - 7.5rem);
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  display: block;
-  cursor: zoom-in;
-}
-/* 1:1 — the stage scrolls, which gives panning without any drag maths. */
-.pm-box.is-zoomed .pm-box-stage { width: 100%; height: 100%; align-items: flex-start; }
-.pm-box.is-zoomed .pm-box-img {
-  max-width: none;
-  max-height: none;
-  cursor: zoom-out;
-}
-.pm-box-cap {
-  position: absolute;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
-  margin: 0;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.85rem;
-  pointer-events: none;
-}
-.pm-box-close,
-.pm-box-nav {
-  position: absolute;
-  appearance: none;
-  border: 0;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border-radius: 999px;
-  cursor: inherit;
-  line-height: 1;
-  transition: background 0.15s ease;
-}
-.pm-box-close:hover,
-.pm-box-nav:hover { background: rgba(255, 255, 255, 0.26); }
-.pm-box-close {
-  top: 1rem;
-  right: 1rem;
-  width: 2.4rem;
-  height: 2.4rem;
-  font-size: 1rem;
-}
-.pm-box-nav {
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.8rem;
-  height: 2.8rem;
-  font-size: 1.6rem;
-}
-.pm-box-prev { left: 1rem; }
-.pm-box-next { right: 1rem; }
-.pm-box-nav[hidden] { display: none; }
-@media (max-width: 640px) {
-  .pm-box { padding: 3rem 0.5rem 3.5rem; }
-  .pm-box-nav { width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
-}
+.pm-popup .maplibregl-popup-tip { border-top-color: var(--surface); }
+.pm-popup .maplibregl-popup-close-button { color: var(--muted); font-size: 1.1rem; }
 
 /* MapLibre's own chrome, retinted to the active palette. */
 .maplibregl-map { font: inherit; background: var(--card); }
 .maplibregl-ctrl-group {
-  background: var(--surface);
+  background: var(--surface) !important;
   border: 1px solid var(--rule);
-  box-shadow: none;
 }
 .maplibregl-ctrl-group button + button { border-top-color: var(--rule); }
-.maplibregl-ctrl-group button:not(:disabled):hover { background: var(--hover-tint); }
-[data-theme="dark"] .maplibregl-ctrl-icon { filter: invert(1); }
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: var(--map-ctrl-filter, none); }
 .maplibregl-ctrl-attrib {
-  background: var(--surface);
+  background: var(--surface) !important;
   color: var(--muted);
-  /* The default attribution line is disproportionately loud for a small map.
-     Still legible, still present — the licence requires it to be readable, not
+  /* The default attribution line is disproportionately loud next to a small
+     map. Still legible and still present — the licence asks for readable, not
      prominent. */
   font-size: 0.62rem;
   line-height: 1.5;
   padding: 0 0.4rem;
-  opacity: 0.75;
+  opacity: 0.72;
 }
 .maplibregl-ctrl-attrib:hover { opacity: 1; }
-.maplibregl-ctrl-attrib-button { transform: scale(0.85); }
 .maplibregl-ctrl-attrib a { color: var(--accent-3); }
 
 /* Composer — authoring helper, not an uploader (the site is static). */

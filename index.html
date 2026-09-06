@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Defence in depth: even if markup were ever injected, scripts may only run
-       from this origin and pinned cdnjs dependencies. 'unsafe-inline' is needed for
+       from this origin and the pinned GSAP CDN. 'unsafe-inline' is needed for
        style= attributes only; no inline <script> exists, so scripts stay strict.
        (frame-ancestors is ignored in a meta CSP and needs an HTTP header, which
        GitHub Pages does not allow.)
@@ -37,7 +37,7 @@
         integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="assets/css/themes.css?v=4" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=25" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=26" />
   <!-- Render-blocking on purpose: stamps the saved theme onto <html> before
        first paint, so the page never flashes the default palette first. It
        has to be a file, not inline, because the CSP above forbids inline
@@ -481,7 +481,7 @@
           integrity="sha512-hoXlvOdSmh58mppUyZHZsscHkR/yXl6zLpTMTNwA6IZ61DpeaCNjosRu1WJ2DeIpkfW5MsJJ9H89zjV4IBGqRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="assets/js/theme.js?v=5"></script>
-  <script src="assets/js/photo-map.js?v=16"></script>
+  <script src="assets/js/photo-map.js?v=18"></script>
   <script src="assets/js/script.js?v=13"></script>
   <script src="assets/js/resume.js?v=6"></script>
 </body>
