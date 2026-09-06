@@ -11,14 +11,10 @@ silently changed:
 - **"NVDIA"** is presumably meant to be **"NVIDIA"**.
 - Its start date `October 2026 – Present` is in the future.
 
-## 2. Publish the first Photo Map entry
+## 2. Smaller polish
 
-The map is intentionally empty until a real photograph, date, and location are
-added. Follow `assets/photos/README.md`; do not invent a location from the
-wallpaper alone.
-
-## 3. Smaller polish
-
+- **Photo dates**: the 11 map photos have no `date` field. EXIF was stripped
+  before publishing, so capture dates would have to come from you.
 - **Dead CSS** in `styles.css`: `.r-project`, `.r-project-head`,
   `.r-project-name`, `.r-project-link`, `.r-tagline` are styled but never
   emitted by `resume.js`.
@@ -43,3 +39,4 @@ from the resume, resume indent hierarchy, 9-palette theme system with
 Auto/Light/Dark and a Control Centre popover, real identity/contact links,
 featured project cards, grouped skills, working browser history controls, and
 keyboard-safe tabs, menus, and resume modal.
+ Eleven photographs published to the Photo Map, EXIF stripped.
