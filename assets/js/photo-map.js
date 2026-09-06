@@ -34,9 +34,41 @@
 // ==========================================================================
 
 (function photoMap() {
+  const IS_LOCAL =
+    location.protocol === "file:" ||
+    /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(location.hostname) ||
+    location.hostname.endsWith(".local");
+
+  // FIRST, before any other check. Stripping the author-only composer must not
+  // depend on the rest of this module working: it used to sit at the bottom,
+  // below a guard that returns when the map library is missing, so a CDN that
+  // failed to serve MapLibre left visitors with a dead map AND a live-looking
+  // "Add a photo…" button. Removal is not conditional on anything but the host.
+  if (!IS_LOCAL) {
+    document.getElementById("pm-composer")?.remove();
+    document.getElementById("pm-add")?.remove();
+  }
+
   const panel = document.querySelector('[data-panel="map"]');
   const host = document.getElementById("photo-map");
-  if (!panel || !host || typeof maplibregl === "undefined") return;
+  if (!panel || !host) return;
+
+  // Say so rather than leaving an empty box. MapLibre is a ~1 MB script from a
+  // CDN; when it does not arrive there is otherwise nothing on screen and
+  // nothing in the console to explain the blank rectangle.
+  function mapUnavailable(msg) {
+    const empty = document.getElementById("pm-empty");
+    if (empty) {
+      empty.hidden = false;
+      empty.textContent = msg;
+    }
+    host.classList.add("pm-dead");
+  }
+
+  if (typeof maplibregl === "undefined") {
+    mapUnavailable("The map library did not load — check your connection or any content blockers.");
+    return;
+  }
 
   const PHOTO_DIR = "assets/photos/";
   const MANIFEST = "assets/data/photos.json";
@@ -46,13 +78,6 @@
   const STYLES = { light: OFM + "liberty", dark: OFM + "dark" };
   // Zoom at which pins stop being dots and become photographs.
   const THUMB_ZOOM = 10;
-
-  // Declared up here, not down by the composer, because build() consults it
-  // and build() can run before that point.
-  const IS_LOCAL =
-    location.protocol === "file:" ||
-    /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(location.hostname) ||
-    location.hostname.endsWith(".local");
 
   let map = null;
   let markers = [];
@@ -86,13 +111,7 @@
         attributionControl: { compact: false },
       });
     } catch (err) {
-      // No WebGL — a browser Leaflet would have coped with. Say so rather
-      // than leaving an empty grey box.
-      const empty = document.getElementById("pm-empty");
-      if (empty) {
-        empty.hidden = false;
-        empty.textContent = "This map needs WebGL, which this browser has turned off.";
-      }
+      mapUnavailable("This map needs WebGL, which this browser has turned off.");
       return;
     }
 
@@ -365,14 +384,10 @@
   // Author-only. Nothing here could ever publish for a visitor — the composer
   // just prints JSON on screen, and a static host has no endpoint to write to
   // — but leaving the button on the live site reads as "anyone can upload".
-  // So on anything other than a local dev server the markup is removed
-  // outright rather than hidden, which also keeps it out of the tab order and
-  // out of screen readers.
-  if (!IS_LOCAL) {
-    document.getElementById("pm-composer")?.remove();
-    document.getElementById("pm-add")?.remove();
-    return;
-  }
+  // The markup itself was already removed at the top of this module, which
+  // also keeps it out of the tab order and out of screen readers; this just
+  // skips wiring up handlers for elements that are gone.
+  if (!IS_LOCAL) return;
 
   const composer = document.getElementById("pm-composer");
   const fileInput = document.getElementById("pm-file");

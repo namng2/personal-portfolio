@@ -108,6 +108,13 @@ the DOM unless the page is served from localhost. It never could publish for
 a visitor (it only prints JSON on screen, and a static host has no write
 endpoint), but leaving the button live reads as "anyone can upload".
 
+That removal runs **first, above every early return**, and must stay there. It
+used to sit at the bottom of the module, below the guard that bails when the
+map library is missing — so anything that stopped MapLibre loading (a CDN
+hiccup, a content blocker, a bad SRI) shipped visitors a dead map *and* a
+live-looking "Add a photo…" button. A security-shaped behaviour must never be
+downstream of a feature working.
+
 - **Verify a tile provider by looking at the pixels, not the status code.**
   CARTO's basemaps were the first choice and returned HTTP 200 `image/png` —
   the PNG was an "API KEY REQUIRED" watermark.
