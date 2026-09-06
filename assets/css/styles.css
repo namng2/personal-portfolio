@@ -1315,8 +1315,8 @@ footer {
    -------------------------------------------------------------------------- */
 .pm-stage { position: relative; margin: 1.25rem 0 0.75rem; }
 .pm-map {
-  height: min(60vh, 460px);
-  height: clamp(200px, 58cqh, 520px);
+  height: min(72vh, 640px);
+  height: clamp(320px, 78cqh, 760px);
   border-radius: 14px;
   border: 1px solid var(--rule);
   background: var(--card);
@@ -1378,6 +1378,30 @@ footer {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 .pm-pin-wrap:hover .pm-pin { transform: translateY(-3px) scale(1.04); }
+
+/* Zoomed out, pins collapse to dots — eleven 64px photographs at overview zoom
+   hide the map they are meant to sit on. photo-map.js toggles .pm-far at
+   THUMB_ZOOM. Leaflet anchors the icon at its bottom centre and keeps the
+   wrapper at its full 72px, so the dot has to be pushed to the bottom or every
+   pin floats above its actual coordinate. */
+.pm-far .pm-pin-wrap { display: flex; align-items: flex-end; justify-content: center; }
+.pm-far .pm-pin {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border-width: 2px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.pm-far .pm-pin img,
+.pm-far .pm-pin::after { opacity: 0; }
+.pm-far .pm-pin-wrap:hover .pm-pin { transform: scale(1.25); }
+.pm-pin img, .pm-pin::after { transition: opacity 0.15s ease; }
+.pm-pin {
+  transition: width 0.18s ease, height 0.18s ease, border-radius 0.18s ease,
+    background 0.18s ease, transform 0.15s ease;
+}
 .pm-pin-draft {
   border-color: var(--accent-1);
   background: var(--grad);
@@ -1516,6 +1540,16 @@ footer {
   color: var(--muted) !important;
   border-color: var(--rule) !important;
 }
+.leaflet-control-attribution {
+  /* The default attribution line is disproportionately loud next to a small
+     map. Still legible and still present — the licence asks for readable, not
+     prominent. */
+  font-size: 0.62rem;
+  line-height: 1.5;
+  padding: 0 0.4rem;
+  opacity: 0.72;
+}
+.leaflet-control-attribution:hover { opacity: 1; }
 .leaflet-bar a:hover { background: var(--hover-tint) !important; }
 .leaflet-control-attribution a { color: var(--accent-3) !important; }
 
@@ -1562,7 +1596,7 @@ footer {
 /* Narrow *window*, not narrow screen — these need to switch when the window is
    dragged small even on a wide display. */
 @container win (max-width: 620px) {
-  .pm-map { height: clamp(180px, 50cqh, 340px); }
+  .pm-map { height: clamp(260px, 68cqh, 480px); }
   .skill-groups { grid-template-columns: 1fr; }
   .grid { grid-template-columns: 1fr; }
 }

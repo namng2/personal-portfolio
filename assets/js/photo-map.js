@@ -48,6 +48,8 @@
     'Tiles &copy; <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a>';
   // The canvas tiles stop at z16; past that Leaflet upscales the last real
   // tile instead of requesting 404s, so zooming in stays smooth.
+  // Zoom at which pins stop being dots and become photographs.
+  const THUMB_ZOOM = 10;
   const TILE_OPTS = { attribution: ATTRIB, maxNativeZoom: 16, maxZoom: 19 };
 
   // Declared up here, not down by the composer, because build() consults it
@@ -84,6 +86,13 @@
     labelLayer = L.tileLayer(set.labels, { ...TILE_OPTS, attribution: "" }).addTo(map);
 
     markerGroup = L.layerGroup().addTo(map);
+
+    // Eleven 64px thumbnails at an overview zoom is a pile, not a map — they
+    // cover the geography they are meant to sit on. Below THUMB_ZOOM they
+    // collapse to dots; past it they open back up. CSS does the switch.
+    const syncZoom = () => host.classList.toggle("pm-far", map.getZoom() < THUMB_ZOOM);
+    map.on("zoomend", syncZoom);
+    syncZoom();
 
     // The window is resizable from any corner, and Leaflet only measures its
     // container when told to. Without this the tiles keep the old dimensions
@@ -168,6 +177,7 @@
 
     if (bounds.length === 1) map.setView(bounds[0], 13);
     else if (bounds.length > 1) map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    host.classList.toggle("pm-far", map.getZoom() < THUMB_ZOOM);
   }
 
   // Thumbnail pin, in the style of the Photos-on-a-map pin: rounded image with
