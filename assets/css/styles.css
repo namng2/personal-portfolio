@@ -1320,11 +1320,11 @@ footer {
   border-radius: 14px;
   border: 1px solid var(--rule);
   background: var(--card);
-  /* Leaflet panes stack above the browser chrome without this. */
+  /* MapLibre panes stack above the browser chrome without this. */
   z-index: 0;
 }
 .pm-empty {
-  /* Centred, not pinned to the bottom: down there it sits on top of Leaflet's
+  /* Centred, not pinned to the bottom: down there it sits on top of MapLibre's
      attribution, which has to stay readable. */
   position: absolute;
   left: 50%;

@@ -59,7 +59,7 @@
   let photos = [];
 
   // ---- init ---------------------------------------------------------------
-  // Built on first reveal, not at load: Leaflet measures its container, and
+  // Built on first reveal, not at load: MapLibre measures its container, and
   // the panel is display:none until its tab is opened.
 
   function build() {
@@ -344,7 +344,7 @@
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 
-  // Delegated: Leaflet rebuilds popup markup each time one opens.
+  // Delegated: MapLibre rebuilds popup markup each time one opens.
   document.addEventListener("click", (e) => {
     const t = e.target.closest(".pm-pop-open");
     if (!t) return;
@@ -353,7 +353,7 @@
   });
 
   // ---- reveal -------------------------------------------------------------
-  // The panel is hidden until its tab is picked; Leaflet needs telling once it
+  // The panel is hidden until its tab is picked; MapLibre needs telling once it
   // has real dimensions or it renders a grey box with misplaced tiles.
 
   new MutationObserver(() => {
