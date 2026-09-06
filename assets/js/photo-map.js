@@ -34,6 +34,9 @@
   // Everything the styles reference — vector tiles, glyphs, sprites, the
   // Natural Earth raster underlay — comes from tiles.openfreemap.org, so that
   // single host is all the CSP has to allow.
+  // Zoom at which pins stop being dots and become photographs.
+  const THUMB_ZOOM = 10;
+
   const STYLES = {
     light: "https://tiles.openfreemap.org/styles/liberty",
     dark: "https://tiles.openfreemap.org/styles/dark",
@@ -87,8 +90,25 @@
       maxZoom: 19,
       renderWorldCopies: false,
       attributionControl: false,
+      // MapLibre enables rotation and pitch by default; Leaflet never did, and
+      // a photo map has no use for a tilted or spun basemap — it just makes the
+      // pins hard to read. Keep it flat and north-up, like before.
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchPitch: false,
     });
+    map.touchZoomRotate.disableRotation();
+    map.keyboard.disableRotation();
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+
+    // Eleven 64px thumbnails at an overview zoom is a pile, not a map. Below
+    // THUMB_ZOOM they collapse to dots and the geography reads; past it they
+    // open back up. CSS does the actual switch off this one class.
+    const syncZoomClass = () =>
+      host.classList.toggle("pm-far", map.getZoom() < THUMB_ZOOM);
+    map.on("zoom", syncZoomClass);
+    map.on("load", syncZoomClass);
+    syncZoomClass();
     map.addControl(new maplibregl.AttributionControl({ compact: false }), "bottom-right");
 
     // The window is resizable from any corner, and MapLibre only measures its
@@ -206,6 +226,7 @@
   function fitToPhotos() {
     if (userMoved || !map || !photoBounds) return;
     map.fitBounds(photoBounds, { padding: 50, maxZoom: 14, duration: 0 });
+    host.classList.toggle("pm-far", map.getZoom() < THUMB_ZOOM);
   }
 
   // Thumbnail pin, in the style of the Photos-on-a-map pin: rounded image with
