@@ -84,6 +84,22 @@
     labelLayer = L.tileLayer(set.labels, { ...TILE_OPTS, attribution: "" }).addTo(map);
 
     markerGroup = L.layerGroup().addTo(map);
+
+    // The window is resizable from any corner, and Leaflet only measures its
+    // container when told to. Without this the tiles keep the old dimensions
+    // and cover part of the box. Coalesced into a frame so a drag does not
+    // trigger a re-measure per pointer event.
+    if (typeof ResizeObserver !== "undefined") {
+      let queued = false;
+      new ResizeObserver(() => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => {
+          queued = false;
+          map.invalidateSize();
+        });
+      }).observe(host);
+    }
     // Composer-only, and gated on IS_LOCAL: onMapClick closes over `composer`,
     // which is never initialised on the deployed site.
     if (IS_LOCAL) map.on("click", onMapClick);

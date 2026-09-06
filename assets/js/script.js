@@ -142,6 +142,12 @@ function particleColor(alpha) {
     mx = e.clientX; my = e.clientY;
     dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
     document.body.classList.add("cursor-ready");
+    // The ring belongs to the window. Over the desktop it reads as a stray
+    // artefact, and over a resize corner it hides the arrows that matter, so
+    // in both cases hand back to a real cursor.
+    const t = e.target;
+    document.body.classList.toggle("cursor-outside", !t?.closest?.(".browser"));
+    document.body.classList.toggle("cursor-on-handle", !!t?.closest?.(".resize-handle"));
   });
 
   // How hard the ring chases the pointer each frame: 1 locks it to the dot,
@@ -455,54 +461,77 @@ function particleColor(alpha) {
 // --------------------------------------------------------------------------
 (function resizableWindow() {
   const browser = document.querySelector(".browser");
-  const handle = browser?.querySelector(".resize-handle");
-  if (!browser || !handle) return;
+  const handles = [...(browser?.querySelectorAll(".resize-handle") || [])];
+  if (!browser || !handles.length) return;
   if (window.matchMedia("(max-width: 640px)").matches) return;
 
   const MIN_W = 420;
   const MIN_H = 320;
+  const EDGE = 8; // breathing room against the viewport
+  const topLimit = () =>
+    parseInt(getComputedStyle(document.documentElement).getPropertyValue("--menubar-h"), 10) || 0;
 
-  let pointerId = null;
-  let startX = 0, startY = 0, startW = 0, startH = 0;
+  // Track the window as four edges rather than an origin plus a size. Dragging
+  // a corner moves two of them and leaves the opposite two pinned, which is
+  // what makes the far corner stay put — and it keeps the minimum size from
+  // pushing the window sideways once it stops shrinking.
+  let drag = null;
 
-  handle.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    // Pin first: while the window is still centred by a transform, changing its
-    // size would grow it from the middle instead of the top-left corner.
-    window.__pinWindow?.();
-    browser.classList.remove("maximized");
+  handles.forEach((handle) => {
+    handle.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      // Pin first: while the window is still centred by a transform, resizing
+      // it would grow from the middle instead of from the dragged corner.
+      window.__pinWindow?.();
+      browser.classList.remove("maximized");
 
-    pointerId = e.pointerId;
-    startX = e.clientX;
-    startY = e.clientY;
-    const r = browser.getBoundingClientRect();
-    startW = r.width;
-    startH = r.height;
-    browser.classList.add("resizing-window");
-    handle.setPointerCapture(pointerId);
+      const r = browser.getBoundingClientRect();
+      drag = {
+        handle,
+        id: e.pointerId,
+        corner: handle.dataset.corner || "se",
+        x: e.clientX,
+        y: e.clientY,
+        left: r.left, top: r.top, right: r.right, bottom: r.bottom,
+      };
+      browser.classList.add("resizing-window");
+      handle.setPointerCapture(e.pointerId);
+    });
+
+    handle.addEventListener("pointermove", (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      const c = drag.corner;
+
+      let { left, top, right, bottom } = drag;
+      if (c.includes("w")) left = Math.min(drag.left + dx, drag.right - MIN_W);
+      if (c.includes("e")) right = Math.max(drag.right + dx, drag.left + MIN_W);
+      if (c.includes("n")) top = Math.min(drag.top + dy, drag.bottom - MIN_H);
+      if (c.includes("s")) bottom = Math.max(drag.bottom + dy, drag.top + MIN_H);
+
+      left = Math.max(EDGE, left);
+      top = Math.max(topLimit() + EDGE, top);
+      right = Math.min(window.innerWidth - EDGE, right);
+      bottom = Math.min(window.innerHeight - EDGE, bottom);
+
+      browser.style.left = left + "px";
+      browser.style.top = top + "px";
+      browser.style.width = Math.max(MIN_W, right - left) + "px";
+      browser.style.height = Math.max(MIN_H, bottom - top) + "px";
+    });
+
+    const end = (e) => {
+      if (!drag || (e && e.pointerId !== drag.id)) return;
+      try { drag.handle.releasePointerCapture(drag.id); } catch (_) {}
+      drag = null;
+      browser.classList.remove("resizing-window");
+    };
+    handle.addEventListener("pointerup", end);
+    handle.addEventListener("pointercancel", end);
   });
-
-  handle.addEventListener("pointermove", (e) => {
-    if (pointerId === null || e.pointerId !== pointerId) return;
-    const r = browser.getBoundingClientRect();
-    const maxW = window.innerWidth - r.left - 8;
-    const maxH = window.innerHeight - r.top - 8;
-    browser.style.width =
-      Math.max(MIN_W, Math.min(maxW, startW + e.clientX - startX)) + "px";
-    browser.style.height =
-      Math.max(MIN_H, Math.min(maxH, startH + e.clientY - startY)) + "px";
-  });
-
-  function end(e) {
-    if (pointerId === null || (e && e.pointerId !== pointerId)) return;
-    try { handle.releasePointerCapture(pointerId); } catch (_) {}
-    pointerId = null;
-    browser.classList.remove("resizing-window");
-  }
-  handle.addEventListener("pointerup", end);
-  handle.addEventListener("pointercancel", end);
 
   // Zoom toggles fullscreen, remembering the size to come back to. Inline
   // width/height would otherwise win over the .maximized rules.
