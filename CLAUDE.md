@@ -16,7 +16,7 @@ assets/css/themes.css   ALL colour: palettes + the derivation layer
 assets/css/styles.css   everything else; no colour literals belong here
 assets/js/boot-theme.js runs from <head> before paint; stops the theme flash
 assets/js/theme.js      appearance engine + the Control Centre popover
-assets/js/photo-map.js  Map tab: Leaflet + photo pins + the add-photo helper
+assets/js/photo-map.js  Map tab: MapLibre + photo pins + add-photo helper
 assets/data/photos.json the photo manifest (what the Map tab renders)
 assets/photos/          the photo files themselves
 assets/js/script.js     particles, cursor, tabs, window drag/resize, menu bar
@@ -79,10 +79,10 @@ Gotchas found the hard way:
 
 ## The photo map
 
-Leaflet + Esri Gray Canvas tiles. **No API key by design** — the repo is
-public, so a key would be readable in source. Each mode is two tile layers
-(gray canvas + a transparent label layer), and the tile path is `{z}/{y}/{x}`,
-not Leaflet's usual `{z}/{x}/{y}`.
+MapLibre GL JS + OpenStreetMap Standard raster tiles. **No API key by design**
+— the repo is public, so a key would be readable in source. The provider is
+declared once in `MAP_STYLE`; markers, popups, and the composer are independent
+of it. Keep the visible OpenStreetMap attribution and follow its tile policy.
 
 Publishing a photo is: file into `assets/photos/`, entry into
 `assets/data/photos.json`, push. A manifest `file` may also be a full
@@ -94,11 +94,10 @@ the DOM unless the page is served from localhost. It never could publish for
 a visitor (it only prints JSON on screen, and a static host has no write
 endpoint), but leaving the button live reads as "anyone can upload".
 
-- **Verify a tile provider by looking at the pixels, not the status code.**
-  CARTO's basemaps were the first choice and returned HTTP 200 `image/png` —
-  the PNG was an "API KEY REQUIRED" watermark.
-- The thin grey lines across the map are county boundaries Esri draws, not
-  tile seams. Tiles are exactly adjacent; it was checked.
+- MapLibre's CDN bundle creates a Blob worker. Keep `worker-src 'self' blob:`
+  in the CSP, and keep the tile host in both `connect-src` and `img-src`.
+- **Verify a tile provider by looking at the pixels, not the status code.** A
+  provider can return HTTP 200 with an error watermark instead of a real map.
 
 ## Conventions
 
