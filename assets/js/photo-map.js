@@ -1,20 +1,24 @@
 // ==========================================================================
 // photo-map.js — the Map tab: photo thumbnails pinned where they were taken.
 //
-// Provider: Leaflet + OpenStreetMap's standard raster tiles. No API key by
-// design — the repo is public, so a key would be readable in the source.
-// (CARTO's basemaps look similar but now serve an "API KEY REQUIRED"
-// watermark — the tiles still return HTTP 200, so check the pixels, not the
-// status code, if this ever needs revisiting. OSM's own servers answer curl
-// with a 403 image and a browser with a real tile, so check in a browser.)
+// Provider: MapLibre GL JS + OpenFreeMap. No API key by design — the repo is
+// public, so a key would be readable in the source. OpenFreeMap serves vector
+// tiles, which Leaflet cannot draw at all; that is why the renderer is
+// MapLibre and not Leaflet. Labels stay sharp at any zoom and rotate with the
+// map, and each theme gets a real cartographic style rather than a filter.
+// (CARTO looks similar but now serves an "API KEY REQUIRED" watermark at HTTP
+// 200 — check the pixels, not the status code, if this ever needs revisiting.)
 //
-// One layer, not two: OSM bakes place names into the tile, and there is only
-// the one style, so dark mode is a CSS filter over .leaflet-tile-pane rather
-// than a second tile source. That filter lives in styles.css and keys off
-// [data-theme="dark"], which is why nothing here listens for themechange.
+// Everything OpenFreeMap needs is on one origin: style JSON, vector tiles,
+// glyphs and sprites. All four have to be reachable from the CSP in
+// index.html — connect-src for the JSON/pbf, img-src for the sprite sheet and
+// the Natural Earth raster underlay, and worker-src blob: because MapLibre
+// builds its tile workers from blob URLs.
 //
-// OSM's tile usage policy covers this: a low-traffic personal site with the
-// required attribution. Heavy or commercial use would need a mirror.
+// Markers are plain DOM, positioned by the map's projection, so they do not
+// depend on the style being loaded. Do not gate rendering photographs on
+// map.on("load") — a slow or failed basemap then costs you the photographs
+// too, which is the whole point of the tab.
 //
 // PUBLISHING A PHOTO (the site is static — nothing uploads at runtime):
 //   1. put the image in assets/photos/
@@ -32,16 +36,16 @@
 (function photoMap() {
   const panel = document.querySelector('[data-panel="map"]');
   const host = document.getElementById("photo-map");
-  if (!panel || !host || typeof L === "undefined") return;
+  if (!panel || !host || typeof maplibregl === "undefined") return;
 
   const PHOTO_DIR = "assets/photos/";
   const MANIFEST = "assets/data/photos.json";
-  const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-  const ATTRIB =
-    '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+  const OFM = "https://tiles.openfreemap.org/styles/";
+  // Liberty is OpenFreeMap's full-colour style; dark is its night counterpart.
+  // Both carry their own attribution, which MapLibre renders for us.
+  const STYLES = { light: OFM + "liberty", dark: OFM + "dark" };
   // Zoom at which pins stop being dots and become photographs.
   const THUMB_ZOOM = 10;
-  const TILE_OPTS = { attribution: ATTRIB, maxZoom: 19 };
 
   // Declared up here, not down by the composer, because build() consults it
   // and build() can run before that point.
@@ -51,40 +55,54 @@
     location.hostname.endsWith(".local");
 
   let map = null;
-  let markerGroup = null;
+  let markers = [];
   let photos = [];
 
+  const currentMode = () =>
+    window.__getResolvedTheme?.() === "light" ? "light" : "dark";
+
+  // Dots below THUMB_ZOOM, photographs above it — eleven 64px thumbnails at an
+  // overview zoom cover the geography they are meant to sit on. CSS does the
+  // switch; this only decides which side of the line we are on.
+  const syncZoom = () => {
+    if (map) host.classList.toggle("pm-far", map.getZoom() < THUMB_ZOOM);
+  };
+
   // ---- init ---------------------------------------------------------------
-  // Built on first reveal, not at load: Leaflet measures its container, and
-  // the panel is display:none until its tab is opened.
+  // Built on first reveal, not at load: the panel is display:none until its
+  // tab is opened, so before that the container has no dimensions to render
+  // into.
 
   function build() {
     if (map) return;
 
-    map = L.map(host, {
-      zoomControl: true,
-      attributionControl: true,
-      scrollWheelZoom: true,
-      // Keeps the world from repeating sideways when zoomed out.
-      worldCopyJump: true,
-      minZoom: 2,
-    }).setView([37.7749, -122.4194], 11);
+    try {
+      map = new maplibregl.Map({
+        container: host,
+        style: STYLES[currentMode()],
+        center: [-122.4194, 37.7749], // MapLibre takes lng,lat — not lat,lng
+        zoom: 11,
+        minZoom: 2,
+        attributionControl: { compact: false },
+      });
+    } catch (err) {
+      // No WebGL — a browser Leaflet would have coped with. Say so rather
+      // than leaving an empty grey box.
+      const empty = document.getElementById("pm-empty");
+      if (empty) {
+        empty.hidden = false;
+        empty.textContent = "This map needs WebGL, which this browser has turned off.";
+      }
+      return;
+    }
 
-    L.tileLayer(TILES, TILE_OPTS).addTo(map);
-
-    markerGroup = L.layerGroup().addTo(map);
-
-    // Eleven 64px thumbnails at an overview zoom is a pile, not a map — they
-    // cover the geography they are meant to sit on. Below THUMB_ZOOM they
-    // collapse to dots; past it they open back up. CSS does the switch.
-    const syncZoom = () => host.classList.toggle("pm-far", map.getZoom() < THUMB_ZOOM);
-    map.on("zoomend", syncZoom);
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+    map.on("zoom", syncZoom);
     syncZoom();
 
-    // The window is resizable from any corner, and Leaflet only measures its
-    // container when told to. Without this the tiles keep the old dimensions
-    // and cover part of the box. Coalesced into a frame so a drag does not
-    // trigger a re-measure per pointer event.
+    // The window is resizable from any corner, and MapLibre only re-measures
+    // its container when told to. Coalesced into a frame so dragging a corner
+    // does not trigger a re-measure per pointer event.
     if (typeof ResizeObserver !== "undefined") {
       let queued = false;
       new ResizeObserver(() => {
@@ -92,15 +110,23 @@
         queued = true;
         requestAnimationFrame(() => {
           queued = false;
-          map.invalidateSize();
+          map.resize();
         });
       }).observe(host);
     }
     // Composer-only, and gated on IS_LOCAL: onMapClick closes over `composer`,
     // which is never initialised on the deployed site.
     if (IS_LOCAL) map.on("click", onMapClick);
+    // Deliberately not inside map.on("load"): the photographs are the content,
+    // and they must not wait on — or be lost with — the basemap.
     load();
   }
+
+  // Each theme gets its own cartography. Markers are DOM overlays, so they
+  // survive setStyle untouched.
+  window.addEventListener("themechange", () => {
+    if (map) map.setStyle(STYLES[currentMode()]);
+  });
 
   // ---- data ---------------------------------------------------------------
 
@@ -131,14 +157,23 @@
   const valid = (p) => p && photoSrc(p) && isFinite(p.lat) && isFinite(p.lng);
 
   function render() {
-    markerGroup.clearLayers();
-    const bounds = [];
+    markers.forEach((m) => m.remove());
+    markers = [];
+    const pts = [];
 
     photos.forEach((p) => {
-      const marker = L.marker([p.lat, p.lng], { icon: thumbIcon(p), title: p.title || p.file });
-      marker.bindPopup(popupHtml(p), { className: "pm-popup", maxWidth: 320, minWidth: 240 });
-      marker.addTo(markerGroup);
-      bounds.push([p.lat, p.lng]);
+      const popup = new maplibregl.Popup({
+        className: "pm-popup",
+        maxWidth: "320px",
+        offset: 12,
+      }).setHTML(popupHtml(p));
+      markers.push(
+        new maplibregl.Marker({ element: thumbEl(p), anchor: "bottom" })
+          .setLngLat([p.lng, p.lat])
+          .setPopup(popup)
+          .addTo(map)
+      );
+      pts.push([p.lng, p.lat]);
     });
 
     const empty = document.getElementById("pm-empty");
@@ -150,25 +185,31 @@
         : "";
     }
 
-    if (bounds.length === 1) map.setView(bounds[0], 13);
-    else if (bounds.length > 1) map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
-    host.classList.toggle("pm-far", map.getZoom() < THUMB_ZOOM);
+    if (pts.length === 1) {
+      map.jumpTo({ center: pts[0], zoom: 13 });
+    } else if (pts.length > 1) {
+      const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
+      pts.forEach((c) => b.extend(c));
+      // animate:false so the fit lands even while the panel is mid-reveal —
+      // an eased flight can be interrupted and leave the view somewhere else.
+      map.fitBounds(b, { padding: 60, maxZoom: 14, animate: false });
+    }
+    syncZoom();
   }
 
   // Thumbnail pin, in the style of the Photos-on-a-map pin: rounded image with
-  // a pointer beneath it. divIcon rather than an image icon so it can be styled
-  // with the site's own tokens.
-  function thumbIcon(p) {
-    return L.divIcon({
-      className: "pm-pin-wrap",
-      html:
-        '<span class="pm-pin">' +
-        `<img src="${escAttr(photoSrc(p))}" alt="${escAttr(p.title || "")}" loading="lazy">` +
-        "</span>",
-      iconSize: [64, 72],
-      iconAnchor: [32, 72],
-      popupAnchor: [0, -70],
-    });
+  // a pointer beneath it. A plain element, styled with the site's own tokens.
+  // MapLibre gives markers no intrinsic size, so .pm-pin-wrap sets its own in
+  // styles.css; anchor:"bottom" then puts the tail on the coordinate.
+  function thumbEl(p) {
+    const el = document.createElement("div");
+    el.className = "pm-pin-wrap";
+    el.title = p.title || p.file || "";
+    el.innerHTML =
+      '<span class="pm-pin">' +
+      `<img src="${escAttr(photoSrc(p))}" alt="${escAttr(p.title || "")}" loading="lazy">` +
+      "</span>";
+    return el;
   }
 
   function popupHtml(p) {
@@ -309,13 +350,13 @@
   });
 
   // ---- reveal -------------------------------------------------------------
-  // The panel is hidden until its tab is picked; Leaflet needs telling once it
-  // has real dimensions or it renders a grey box with misplaced tiles.
+  // The panel is hidden until its tab is picked; MapLibre needs telling once
+  // it has real dimensions or it renders into a zero-sized canvas.
 
   new MutationObserver(() => {
     if (!panel.classList.contains("active")) return;
     build();
-    requestAnimationFrame(() => map?.invalidateSize());
+    requestAnimationFrame(() => map?.resize());
   }).observe(panel, { attributes: true, attributeFilter: ["class"] });
 
   if (panel.classList.contains("active")) build();
@@ -349,7 +390,7 @@
   document.getElementById("pm-cancel")?.addEventListener("click", () => {
     composer.hidden = true;
     if (draftMarker) {
-      map.removeLayer(draftMarker);
+      draftMarker.remove();
       draftMarker = null;
     }
   });
@@ -363,7 +404,7 @@
     draft.lat = null;
     draft.lng = null;
     if (draftMarker) {
-      map.removeLayer(draftMarker);
+      draftMarker.remove();
       draftMarker = null;
     }
     const note = document.getElementById("pm-file-note");
@@ -399,19 +440,22 @@
   });
 
   function placeDraft(lat, lng, recentre) {
-    if (draftMarker) map.removeLayer(draftMarker);
-    draftMarker = L.marker([lat, lng], {
-      icon: L.divIcon({ className: "pm-pin-wrap", html: '<span class="pm-pin pm-pin-draft"></span>', iconSize: [64, 72], iconAnchor: [32, 72] }),
-    }).addTo(map);
-    if (recentre) map.setView([lat, lng], Math.max(map.getZoom(), 13));
+    if (draftMarker) draftMarker.remove();
+    const el = document.createElement("div");
+    el.className = "pm-pin-wrap";
+    el.innerHTML = '<span class="pm-pin pm-pin-draft"></span>';
+    draftMarker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+      .setLngLat([lng, lat])
+      .addTo(map);
+    if (recentre) map.jumpTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 13) });
   }
 
   // Clicking the map only sets a location while the composer is open, so it
   // does not hijack ordinary panning.
   function onMapClick(e) {
     if (composer.hidden) return;
-    draft.lat = +e.latlng.lat.toFixed(6);
-    draft.lng = +e.latlng.lng.toFixed(6);
+    draft.lat = +e.lngLat.lat.toFixed(6);
+    draft.lng = +e.lngLat.lng.toFixed(6);
     placeDraft(draft.lat, draft.lng, false);
     emit();
   }

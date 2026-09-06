@@ -1346,7 +1346,10 @@ footer {
 .pm-bar .btn { margin-left: auto; }
 
 /* Thumbnail pin: rounded photo with a pointer beneath, like Photos on a map. */
-.pm-pin-wrap { background: none; border: 0; }
+/* MapLibre markers have no intrinsic size (Leaflet's divIcon took an
+   iconSize). The wrapper sets it here, and the marker is anchored "bottom" so
+   the tail lands on the coordinate. */
+.pm-pin-wrap { background: none; border: 0; width: 64px; height: 72px; cursor: pointer; }
 .pm-pin {
   display: block;
   position: relative;
@@ -1359,11 +1362,6 @@ footer {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   transition: transform 0.15s ease;
 }
-/* Leaflet ships `.leaflet-container .leaflet-marker-pane img { width: auto }`,
-   which is more specific than `.pm-pin img` and wins regardless of order. That
-   left portrait thumbnails narrower than their frame, showing the pin's own
-   background as grey bars down each side. Matching its specificity fixes it. */
-.leaflet-marker-pane .pm-pin img,
 .pm-pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pm-pin::after {
   content: "";
@@ -1381,9 +1379,9 @@ footer {
 
 /* Zoomed out, pins collapse to dots — eleven 64px photographs at overview zoom
    hide the map they are meant to sit on. photo-map.js toggles .pm-far at
-   THUMB_ZOOM. Leaflet anchors the icon at its bottom centre and keeps the
-   wrapper at its full 72px, so the dot has to be pushed to the bottom or every
-   pin floats above its actual coordinate. */
+   THUMB_ZOOM. The marker is anchored at its bottom centre and the wrapper
+   stays 72px tall, so the dot has to be pushed to the bottom or every pin
+   floats above its actual coordinate. */
 .pm-far .pm-pin-wrap { display: flex; align-items: flex-end; justify-content: center; }
 .pm-far .pm-pin {
   width: 16px;
@@ -1408,14 +1406,17 @@ footer {
 }
 .pm-pin-draft::after { background: var(--accent-1); }
 
-.pm-popup .leaflet-popup-content-wrapper {
+.pm-popup .maplibregl-popup-content {
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--rule);
   border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
 }
-.pm-popup .leaflet-popup-tip { background: var(--surface); }
-.pm-popup .leaflet-popup-content { margin: 0.7rem 0.8rem; }
+.pm-popup .maplibregl-popup-tip { border-top-color: var(--surface); border-bottom-color: var(--surface); }
+.pm-popup .maplibregl-popup-close-button { color: var(--muted); font-size: 1.1rem; padding: 0 0.35rem; }
+.pm-popup .maplibregl-popup-close-button:hover { background: var(--hover-tint); color: var(--fg); }
 .pm-pop-img { width: 100%; border-radius: 8px; display: block; }
 .pm-pop-title { margin: 0.5rem 0 0.15rem; font-size: 0.95rem; }
 .pm-pop-meta { margin: 0; color: var(--muted); font-size: 0.8rem; }
@@ -1532,22 +1533,22 @@ footer {
   .pm-box-nav { width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
 }
 
-/* Leaflet's own chrome, retinted to the active palette. */
-.leaflet-container { font: inherit; background: var(--card); }
-
-/* OpenStreetMap ships one style, and it is a light one. Dark mode inverts the
-   tile pane only — markers, popups and controls sit in their own panes, so the
-   photographs and the chrome come through untouched. */
-[data-theme="dark"] .leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.75);
-}
-.leaflet-bar a,
-.leaflet-control-attribution {
+/* MapLibre's own chrome, retinted to the active palette. No dark-mode filter
+   here — each theme loads its own cartographic style instead. */
+.maplibregl-map { font: inherit; background: var(--card); }
+.maplibregl-ctrl-group,
+.maplibregl-ctrl-attrib.maplibregl-compact,
+.maplibregl-ctrl-attrib {
   background: var(--surface) !important;
   color: var(--muted) !important;
-  border-color: var(--rule) !important;
+  border: 1px solid var(--rule);
 }
-.leaflet-control-attribution {
+.maplibregl-ctrl-group button + button { border-top: 1px solid var(--rule); }
+.maplibregl-ctrl-group button:hover { background: var(--hover-tint); }
+/* The zoom glyphs are background SVGs with a hard-coded dark fill, invisible
+   on a dark surface. Invert them there rather than shipping our own icons. */
+[data-theme="dark"] .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+.maplibregl-ctrl-attrib {
   /* The default attribution line is disproportionately loud next to a small
      map. Still legible and still present — the licence asks for readable, not
      prominent. */
@@ -1556,9 +1557,8 @@ footer {
   padding: 0 0.4rem;
   opacity: 0.72;
 }
-.leaflet-control-attribution:hover { opacity: 1; }
-.leaflet-bar a:hover { background: var(--hover-tint) !important; }
-.leaflet-control-attribution a { color: var(--accent-3) !important; }
+.maplibregl-ctrl-attrib:hover { opacity: 1; }
+.maplibregl-ctrl-attrib a { color: var(--accent-3) !important; }
 
 /* Composer — authoring helper, not an uploader (the site is static). */
 .pm-composer {

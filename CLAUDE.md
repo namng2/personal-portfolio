@@ -16,7 +16,7 @@ assets/css/themes.css   ALL colour: palettes + the derivation layer
 assets/css/styles.css   everything else; no colour literals belong here
 assets/js/boot-theme.js runs from <head> before paint; stops the theme flash
 assets/js/theme.js      appearance engine + the Control Centre popover
-assets/js/photo-map.js  Map tab: Leaflet + photo pins + the add-photo helper
+assets/js/photo-map.js  Map tab: MapLibre + photo pins + the add-photo helper
 assets/data/photos.json the photo manifest (what the Map tab renders)
 assets/photos/          the photo files themselves
 assets/js/script.js     particles, cursor, tabs, window drag/resize, menu bar
@@ -79,19 +79,24 @@ Gotchas found the hard way:
 
 ## The photo map
 
-Leaflet + OpenStreetMap's standard raster tiles. **No API key by design** —
-the repo is public, so a key would be readable in source. One tile layer, not
-two: OSM bakes place names into the tile. Real detail runs to z19.
+MapLibre GL JS + OpenFreeMap vector tiles. **No API key by design** — the repo
+is public, so a key would be readable in source. Vector tiles are why the
+renderer is MapLibre and not Leaflet: Leaflet draws `<img>` raster tiles and
+cannot render vector at all. Each mode loads a real cartographic style —
+`liberty` (full colour) for light, `dark` for dark — swapped via `setStyle` on
+`themechange`. No CSS filter is involved.
 
-OSM ships a single (light) style, so **dark mode is a CSS filter** over
-`.leaflet-tile-pane` in `styles.css`, keyed off `[data-theme="dark"]`. The
-photographs and Leaflet's controls sit in other panes and come through
-untouched. Nothing in `photo-map.js` listens for `themechange` any more.
+Everything OpenFreeMap needs is on `tiles.openfreemap.org`, and **all of it has
+to be in the CSP**: `connect-src` for style JSON / vector tiles / glyphs,
+`img-src` for the sprite sheet and Natural Earth underlay, and `worker-src
+blob:` because MapLibre builds tile workers from blob URLs. Miss one and the
+map is blank with nothing useful in the console.
 
-Their [tile usage policy](https://operations.osmfoundation.org/policies/tiles/)
-covers a low-traffic personal site carrying the required attribution. If this
-ever gets real traffic, move to a mirror rather than leaning on their donated
-servers.
+**Markers are DOM overlays**, positioned by the map's projection, so they work
+before the style loads and survive `setStyle`. Never gate rendering photographs
+on `map.on("load")` — a slow or broken basemap would then cost the photographs
+too, which are the point of the tab. MapLibre gives markers no intrinsic size,
+so `.pm-pin-wrap` sets its own 64×72 and the marker uses `anchor: "bottom"`.
 
 Publishing a photo is: file into `assets/photos/`, entry into
 `assets/data/photos.json`, push. A manifest `file` may also be a full
@@ -108,15 +113,19 @@ endpoint), but leaving the button live reads as "anyone can upload".
   the PNG was an "API KEY REQUIRED" watermark.
   OSM's own servers are the mirror image: they answer `curl` with a 403 image
   and a browser with a real tile, so check from a browser, not the shell.
-- **Vector tiles are not an option here.** OSM's official `shortbread_v1`
-  endpoint needs MapLibre, and MapLibre paints through `requestAnimationFrame`,
-  which never fires in the agent's browser pane (`visibilityState` is always
-  `hidden`) — so nothing built on it can be verified before it ships. It also
-  caps at z14. Leaflet uses plain `<img>` tiles and works.
-- That same frozen `rAF` freezes CSS transitions and Leaflet's zoom animation
-  in the pane. Pins stuck mid-fade or a map that will not zoom are artifacts of
-  the harness, not bugs; inject `transition: none !important` to see the
-  settled state.
+- **Verifying MapLibre from an agent needs an rAF shim.** The agent's browser
+  pane reports `visibilityState: "hidden"`, so `requestAnimationFrame` never
+  fires and MapLibre's render loop never runs: the canvas stays one flat
+  colour, `load` and `idle` never fire, and zero tiles are requested. Injecting
+  `window.requestAnimationFrame = cb => setTimeout(() => cb(performance.now()), 16)`
+  *before the map is built* makes it render normally and pixel-verifiable. This
+  is a **test-time shim only** — never ship it; real browsers have real rAF.
+- That same frozen `rAF` freezes CSS transitions. Pins stuck mid-fade are an
+  artifact of the harness, not a bug; inject `transition: none !important` to
+  see the settled state.
+- OSM's official `shortbread_v1` vector endpoint was the other candidate. It
+  caps at **z14** and ships no style, glyphs or sprites, so OpenFreeMap wins on
+  both counts.
 
 ## Conventions
 
