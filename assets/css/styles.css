@@ -377,6 +377,10 @@ html, body {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   will-change: left, top, transform;
+  /* An outer container purely so .viewport's own padding can resolve cqw — an
+     element cannot query the container it establishes itself. inline-size
+     only, to leave the height driven by the rules above. */
+  container: shell / inline-size;
 }
 .browser.maximized {
   top: var(--menubar-h);
@@ -567,7 +571,17 @@ html, body {
   position: relative;
   flex: 1;
   overflow-y: auto;
+  /* The window is resizable, so anything inside it has to size against the
+     window rather than the real browser viewport — vw/vh do not change when a
+     corner is dragged. This makes the content area a query container; the
+     rules inside use cqw/cqh and @container instead. */
+  container: win / size;
+  /* Lets the footer fall to the bottom when a panel is short, rather than
+     floating under the content with dead space beneath it. */
+  display: flex;
+  flex-direction: column;
   padding: 2.5rem clamp(1rem, 4vw, 3rem) 3rem;
+  padding-inline: clamp(1rem, 4cqw, 3rem);
 }
 
 /* Tab panels */
@@ -594,6 +608,7 @@ html, body {
 
 .brand {
   font-size: clamp(3rem, 9vw, 5.5rem);
+  font-size: clamp(2.1rem, 9cqw, 5.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;
   margin: 0 0 0.5rem;
@@ -720,6 +735,10 @@ html, body {
 
 /* Original main wrapper retained for spacing inside non-home panels */
 main.viewport > .panel:not([data-panel="home"]) {
+  /* width:100% because .viewport is a flex column: the auto inline margins
+     below suppress stretch, which would otherwise leave the panel at its
+     shrink-to-fit width. max-width still caps it and the margins centre it. */
+  width: 100%;
   max-width: var(--max);
   margin: 0 auto;
 }
@@ -748,6 +767,7 @@ main.viewport > .panel:not([data-panel="home"]) {
 h1, h2, h3 { line-height: 1.15; letter-spacing: -0.02em; margin: 0; }
 h1 {
   font-size: clamp(2.25rem, 6vw, 4rem);
+  font-size: clamp(1.75rem, 6cqw, 4rem);
   font-weight: 800;
   margin: 0.5rem 0 1.25rem;
 }
@@ -1006,7 +1026,12 @@ section { padding: 2rem 0; }
 .find a:hover::before { opacity: 1; transform: translateX(0); }
 
 footer {
-  margin-top: 3rem;
+  /* Same measure as the panels above, so the copyright line starts on the
+     same left edge as the content instead of at the viewport padding. */
+  width: 100%;
+  max-width: var(--max);
+  margin: auto auto 0;
+  padding-top: 3rem;
   padding: 2rem 0;
   border-top: 1px solid var(--rule);
   color: var(--muted);
@@ -1291,6 +1316,7 @@ footer {
 .pm-stage { position: relative; margin: 1.25rem 0 0.75rem; }
 .pm-map {
   height: min(60vh, 460px);
+  height: clamp(200px, 58cqh, 520px);
   border-radius: 14px;
   border: 1px solid var(--rule);
   background: var(--card);
@@ -1532,6 +1558,13 @@ footer {
 
 @media (max-width: 620px) {
   .pm-map { height: 52vh; }
+}
+/* Narrow *window*, not narrow screen — these need to switch when the window is
+   dragged small even on a wide display. */
+@container win (max-width: 620px) {
+  .pm-map { height: clamp(180px, 50cqh, 340px); }
+  .skill-groups { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: 1fr; }
 }
 
 /* --------------------------------------------------------------------------
