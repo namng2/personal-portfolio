@@ -1,13 +1,13 @@
 [
   { "file": "sfo-runway.jpg",           "lat": 37.603927, "lng": -122.373491, "title": "Alaska 737 on the runway", "place": "SFO, from across the bay" },
-  { "file": "castro-diner.jpg",         "lat": 37.762272, "lng": -122.434852, "title": "A ceiling of disco balls", "place": "The Castro, San Francisco" },
-  { "file": "streetcar-mirror.jpg",     "lat": 37.762544, "lng": -122.434796, "title": "Streetcar 1062 in the wing mirror", "place": "The Castro, San Francisco" },
-  { "file": "west-portal-night.jpg",    "lat": 37.738496, "lng": -122.468714, "title": "Still open, late", "place": "West Portal, San Francisco" },
-  { "file": "lands-end-cypress.jpg",    "lat": 37.780010, "lng": -122.513199, "title": "Cypress over the headlands", "place": "Lands End, San Francisco" },
-  { "file": "mile-rock-lighthouse.jpg", "lat": 37.781912, "lng": -122.511929, "title": "Mile Rock at dusk", "place": "Lands End, San Francisco" },
+  { "file": "castro-diner.jpg",         "lat": 37.762272, "lng": -122.434852, "title": "A Sky of Disco Balls", "place": "The Castro, San Francisco" },
+  { "file": "streetcar-mirror.jpg",     "lat": 37.762544, "lng": -122.434796, "title": "Streetcar", "place": "The Castro, San Francisco" },
+  { "file": "west-portal-night.jpg",    "lat": 37.738496, "lng": -122.468714, "title": "", "place": "West Portal, San Francisco" },
+  { "file": "lands-end-cypress.jpg",    "lat": 37.780010, "lng": -122.513199, "title": "", "place": "Lands End, San Francisco" },
+  { "file": "mile-rock-lighthouse.jpg", "lat": 37.781912, "lng": -122.511929, "title": "Rock", "place": "Lands End, San Francisco" },
   { "file": "golden-gate-dusk.jpg",     "lat": 37.787207, "lng": -122.505980, "title": "Birds over the bridge", "place": "Lands End, San Francisco" },
-  { "file": "townhouse-alley.jpg",      "lat": 37.327817, "lng": -121.904322, "title": "Quiet row, midday", "place": "San Jose" },
-  { "file": "santa-cruz-ridgeline.jpg", "lat": 37.228432, "lng": -122.110514, "title": "Fog caught on the ridgeline", "place": "Santa Cruz Mountains" },
-  { "file": "skyline-pullout.jpg",      "lat": 37.230584, "lng": -122.095150, "title": "Pulled over on the ridge road", "place": "Santa Cruz Mountains" },
-  { "file": "river-rafting.jpg",        "lat": 37.807281, "lng": -120.717180, "title": "Downstream, slowly", "place": "Stanislaus River" }
+  { "file": "townhouse-alley.jpg",      "lat": 37.327817, "lng": -121.904322, "title": "Quiet", "place": "San Jose" },
+  { "file": "santa-cruz-ridgeline.jpg", "lat": 37.228432, "lng": -122.110514, "title": "", "place": "Santa Cruz Mountains" },
+  { "file": "skyline-pullout.jpg",      "lat": 37.230584, "lng": -122.095150, "title": "", "place": "Santa Cruz Mountains" },
+  { "file": "river-rafting.jpg",        "lat": 37.807281, "lng": -120.717180, "title": "Slowly", "place": "Stanislaus River" }
 ]
