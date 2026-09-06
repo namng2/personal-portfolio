@@ -79,10 +79,19 @@ Gotchas found the hard way:
 
 ## The photo map
 
-Leaflet + Esri Gray Canvas tiles. **No API key by design** — the repo is
-public, so a key would be readable in source. Each mode is two tile layers
-(gray canvas + a transparent label layer), and the tile path is `{z}/{y}/{x}`,
-not Leaflet's usual `{z}/{x}/{y}`.
+Leaflet + OpenStreetMap's standard raster tiles. **No API key by design** —
+the repo is public, so a key would be readable in source. One tile layer, not
+two: OSM bakes place names into the tile. Real detail runs to z19.
+
+OSM ships a single (light) style, so **dark mode is a CSS filter** over
+`.leaflet-tile-pane` in `styles.css`, keyed off `[data-theme="dark"]`. The
+photographs and Leaflet's controls sit in other panes and come through
+untouched. Nothing in `photo-map.js` listens for `themechange` any more.
+
+Their [tile usage policy](https://operations.osmfoundation.org/policies/tiles/)
+covers a low-traffic personal site carrying the required attribution. If this
+ever gets real traffic, move to a mirror rather than leaning on their donated
+servers.
 
 Publishing a photo is: file into `assets/photos/`, entry into
 `assets/data/photos.json`, push. A manifest `file` may also be a full
@@ -97,8 +106,17 @@ endpoint), but leaving the button live reads as "anyone can upload".
 - **Verify a tile provider by looking at the pixels, not the status code.**
   CARTO's basemaps were the first choice and returned HTTP 200 `image/png` —
   the PNG was an "API KEY REQUIRED" watermark.
-- The thin grey lines across the map are county boundaries Esri draws, not
-  tile seams. Tiles are exactly adjacent; it was checked.
+  OSM's own servers are the mirror image: they answer `curl` with a 403 image
+  and a browser with a real tile, so check from a browser, not the shell.
+- **Vector tiles are not an option here.** OSM's official `shortbread_v1`
+  endpoint needs MapLibre, and MapLibre paints through `requestAnimationFrame`,
+  which never fires in the agent's browser pane (`visibilityState` is always
+  `hidden`) — so nothing built on it can be verified before it ships. It also
+  caps at z14. Leaflet uses plain `<img>` tiles and works.
+- That same frozen `rAF` freezes CSS transitions and Leaflet's zoom animation
+  in the pane. Pins stuck mid-fade or a map that will not zoom are artifacts of
+  the harness, not bugs; inject `transition: none !important` to see the
+  settled state.
 
 ## Conventions
 

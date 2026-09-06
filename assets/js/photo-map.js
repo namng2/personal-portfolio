@@ -1,17 +1,20 @@
 // ==========================================================================
 // photo-map.js — the Map tab: photo thumbnails pinned where they were taken.
 //
-// Provider: Leaflet + Esri's Gray Canvas basemaps. Chosen because they need
-// no API key, which matters on a public static repo where any key would be
-// readable in the source, and because they come as a matching light/dark pair
-// so the map follows the palette system instead of fighting it.
+// Provider: Leaflet + OpenStreetMap's standard raster tiles. No API key by
+// design — the repo is public, so a key would be readable in the source.
 // (CARTO's basemaps look similar but now serve an "API KEY REQUIRED"
 // watermark — the tiles still return HTTP 200, so check the pixels, not the
-// status code, if this ever needs revisiting.)
+// status code, if this ever needs revisiting. OSM's own servers answer curl
+// with a 403 image and a browser with a real tile, so check in a browser.)
 //
-// Esri splits labels out of the basemap, so each mode is two layers: the gray
-// canvas underneath and a transparent reference layer of place names on top.
-// Note the tile path is {z}/{y}/{x}, not Leaflet's usual {z}/{x}/{y}.
+// One layer, not two: OSM bakes place names into the tile, and there is only
+// the one style, so dark mode is a CSS filter over .leaflet-tile-pane rather
+// than a second tile source. That filter lives in styles.css and keys off
+// [data-theme="dark"], which is why nothing here listens for themechange.
+//
+// OSM's tile usage policy covers this: a low-traffic personal site with the
+// required attribution. Heavy or commercial use would need a mirror.
 //
 // PUBLISHING A PHOTO (the site is static — nothing uploads at runtime):
 //   1. put the image in assets/photos/
@@ -33,24 +36,12 @@
 
   const PHOTO_DIR = "assets/photos/";
   const MANIFEST = "assets/data/photos.json";
-  const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/";
-  const TILES = {
-    light: {
-      base: ESRI + "World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-      labels: ESRI + "World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
-    },
-    dark: {
-      base: ESRI + "World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-      labels: ESRI + "World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
-    },
-  };
+  const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
   const ATTRIB =
-    'Tiles &copy; <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a>';
-  // The canvas tiles stop at z16; past that Leaflet upscales the last real
-  // tile instead of requesting 404s, so zooming in stays smooth.
+    '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
   // Zoom at which pins stop being dots and become photographs.
   const THUMB_ZOOM = 10;
-  const TILE_OPTS = { attribution: ATTRIB, maxNativeZoom: 16, maxZoom: 19 };
+  const TILE_OPTS = { attribution: ATTRIB, maxZoom: 19 };
 
   // Declared up here, not down by the composer, because build() consults it
   // and build() can run before that point.
@@ -60,8 +51,6 @@
     location.hostname.endsWith(".local");
 
   let map = null;
-  let baseLayer = null;
-  let labelLayer = null;
   let markerGroup = null;
   let photos = [];
 
@@ -81,9 +70,7 @@
       minZoom: 2,
     }).setView([37.7749, -122.4194], 11);
 
-    const set = TILES[currentMode()];
-    baseLayer = L.tileLayer(set.base, TILE_OPTS).addTo(map);
-    labelLayer = L.tileLayer(set.labels, { ...TILE_OPTS, attribution: "" }).addTo(map);
+    L.tileLayer(TILES, TILE_OPTS).addTo(map);
 
     markerGroup = L.layerGroup().addTo(map);
 
@@ -114,18 +101,6 @@
     if (IS_LOCAL) map.on("click", onMapClick);
     load();
   }
-
-  const currentMode = () =>
-    window.__getResolvedTheme?.() === "light" ? "light" : "dark";
-
-  // Swap basemaps with the palette rather than CSS-filtering the tiles, so
-  // place names stay legible in both modes.
-  window.addEventListener("themechange", () => {
-    if (!baseLayer) return;
-    const set = TILES[currentMode()];
-    baseLayer.setUrl(set.base);
-    labelLayer.setUrl(set.labels);
-  });
 
   // ---- data ---------------------------------------------------------------
 

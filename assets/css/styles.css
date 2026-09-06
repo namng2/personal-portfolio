@@ -1534,6 +1534,13 @@ footer {
 
 /* Leaflet's own chrome, retinted to the active palette. */
 .leaflet-container { font: inherit; background: var(--card); }
+
+/* OpenStreetMap ships one style, and it is a light one. Dark mode inverts the
+   tile pane only — markers, popups and controls sit in their own panes, so the
+   photographs and the chrome come through untouched. */
+[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.75);
+}
 .leaflet-bar a,
 .leaflet-control-attribution {
   background: var(--surface) !important;
