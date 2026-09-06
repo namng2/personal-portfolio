@@ -16,7 +16,7 @@ assets/css/themes.css   ALL colour: palettes + the derivation layer
 assets/css/styles.css   everything else; no colour literals belong here
 assets/js/boot-theme.js runs from <head> before paint; stops the theme flash
 assets/js/theme.js      appearance engine + the Control Centre popover
-assets/js/photo-map.js  Map tab: MapLibre + photo pins + add-photo helper
+assets/js/photo-map.js  Map tab: Leaflet + photo pins + add-photo helper
 assets/data/photos.json the photo manifest (what the Map tab renders)
 assets/photos/          the photo files themselves
 assets/js/script.js     particles, cursor, tabs, window drag/resize, menu bar
@@ -79,10 +79,17 @@ Gotchas found the hard way:
 
 ## The photo map
 
-MapLibre GL JS + OpenStreetMap Standard raster tiles. **No API key by design**
-— the repo is public, so a key would be readable in source. The provider is
-declared once in `MAP_STYLE`; markers, popups, and the composer are independent
-of it. Keep the visible OpenStreetMap attribution and follow its tile policy.
+Leaflet + Esri's **World Topographic** raster basemap. **No API key by design**
+— the repo is public, so a key would be readable in source. Topo rather than
+the Gray Canvas because it is in colour, which is closer to what a photo map
+should look like. Labels are baked into the tiles, so it is a single layer, and
+the tile path is `{z}/{y}/{x}`, not Leaflet's usual `{z}/{x}/{y}`.
+
+Dark mode **filters** the tiles rather than swapping basemap: Esri has no
+colour dark twin, and the grey one throws the colour away. `invert(1)
+hue-rotate(180deg)` darkens the land while leaving water blue and parks green,
+and flips the baked-in labels to light-on-dark for free. Only the tile pane is
+filtered — never the markers.
 
 Publishing a photo is: file into `assets/photos/`, entry into
 `assets/data/photos.json`, push. A manifest `file` may also be a full
@@ -94,10 +101,25 @@ the DOM unless the page is served from localhost. It never could publish for
 a visitor (it only prints JSON on screen, and a static host has no write
 endpoint), but leaving the button live reads as "anyone can upload".
 
-- MapLibre's CDN bundle creates a Blob worker. Keep `worker-src 'self' blob:`
-  in the CSP, and keep the tile host in both `connect-src` and `img-src`.
-- **Verify a tile provider by looking at the pixels, not the status code.** A
-  provider can return HTTP 200 with an error watermark instead of a real map.
+Hard-won, in order of how much time each cost:
+
+- **Verify a tile provider by looking at the pixels, not the status code.**
+  CARTO now serves an "API KEY REQUIRED" watermark as HTTP 200 `image/png`.
+  OpenStreetMap's own tiles are the inverse trap: they work in a browser but
+  return a 403 "Access blocked" image to curl, so the command line lies about
+  them in both directions.
+- **MapLibre cannot be verified in a headless/hidden pane.** It renders through
+  WebGL on a `requestAnimationFrame` loop, and rAF does not run in a hidden
+  document — the canvas gets created and no tiles are ever requested. Leaflet's
+  DOM `<img>` tiles work fine there. That is a real reason to prefer Leaflet
+  here regardless of the provider.
+- **Re-fit the view after the container is measured.** The panel starts
+  `display:none` and the window is resizable, so the first `fitBounds` runs
+  against a mis-measured box and lands the map somewhere else entirely
+  (it was showing Nevada). `fitToPhotos()` re-runs on resize and reveal.
+- **Detect "the user moved the map" from DOM events, not Leaflet's
+  `dragstart`/`zoomstart`** — `fitBounds` fires those itself, so the first
+  programmatic fit marks the map as user-moved and blocks every later re-fit.
 
 ## Conventions
 

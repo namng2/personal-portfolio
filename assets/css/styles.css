@@ -1320,12 +1320,11 @@ footer {
   border-radius: 14px;
   border: 1px solid var(--rule);
   background: var(--card);
-  overflow: hidden;
-  /* Keep MapLibre's canvas and controls inside the portfolio window. */
+  /* Leaflet panes stack above the browser chrome without this. */
   z-index: 0;
 }
 .pm-empty {
-  /* Centred, not pinned to the bottom: down there it sits on top of MapLibre's
+  /* Centred, not pinned to the bottom: down there it sits on top of Leaflet's
      attribution, which has to stay readable. */
   position: absolute;
   left: 50%;
@@ -1347,35 +1346,10 @@ footer {
 .pm-bar .btn { margin-left: auto; }
 
 /* Thumbnail pin: rounded photo with a pointer beneath, like Photos on a map. */
-.pm-pin-wrap {
-  appearance: none;
-  position: relative;
-  display: block;
-  width: 64px;
-  height: 72px;
-  padding: 0;
-  background: none;
-  border: 0;
-  cursor: inherit;
-}
-.pm-pin-wrap::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  bottom: 3px;
-  width: 12px;
-  height: 12px;
-  background: #fff;
-  transform: translateX(-50%) rotate(45deg);
-  border-radius: 2px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+.pm-pin-wrap { background: none; border: 0; }
 .pm-pin {
   display: block;
   position: relative;
-  z-index: 1;
-  box-sizing: border-box;
   width: 64px;
   height: 64px;
   border-radius: 12px;
@@ -1385,55 +1359,42 @@ footer {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   transition: transform 0.15s ease;
 }
+/* Leaflet ships `.leaflet-container .leaflet-marker-pane img { width: auto }`,
+   which is more specific than `.pm-pin img` and wins regardless of order. That
+   left portrait thumbnails narrower than their frame, showing the pin's own
+   background as grey bars down each side. Matching its specificity fixes it. */
+.leaflet-marker-pane .pm-pin img,
 .pm-pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pm-pin-wrap:hover .pm-pin { transform: translateY(-3px) scale(1.04); }
-.pm-pin-wrap:focus-visible .pm-pin {
-  outline: 2px solid var(--accent-1);
-  outline-offset: 3px;
+.pm-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 2px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+.pm-pin-wrap:hover .pm-pin { transform: translateY(-3px) scale(1.04); }
 .pm-pin-draft {
   border-color: var(--accent-1);
   background: var(--grad);
 }
-.pm-pin-wrap.is-draft::after { background: var(--accent-1); }
+.pm-pin-draft::after { background: var(--accent-1); }
 
-.pm-popup .maplibregl-popup-content {
-  min-width: 220px;
-  padding: 0.35rem 0.55rem;
+.pm-popup .leaflet-popup-content-wrapper {
   background: var(--surface);
   color: var(--fg);
   border: 1px solid var(--rule);
   border-radius: 12px;
 }
-.pm-popup .maplibregl-popup-tip { border-color: transparent; }
-.pm-popup[class*="maplibregl-popup-anchor-top"] .maplibregl-popup-tip {
-  border-bottom-color: var(--surface);
-}
-.pm-popup[class*="maplibregl-popup-anchor-bottom"] .maplibregl-popup-tip {
-  border-top-color: var(--surface);
-}
-.pm-popup[class*="maplibregl-popup-anchor-left"] .maplibregl-popup-tip {
-  border-right-color: var(--surface);
-}
-.pm-popup[class*="maplibregl-popup-anchor-right"] .maplibregl-popup-tip {
-  border-left-color: var(--surface);
-}
-.pm-popup .maplibregl-popup-close-button {
-  color: var(--fg);
-  padding: 0.25rem 0.45rem;
-  font-size: 1.1rem;
-  cursor: inherit;
-}
-.pm-popup .maplibregl-popup-close-button:hover { background: var(--hover-tint); }
-.pm-pop-img {
-  width: 100%;
-  height: clamp(76px, 10cqh, 110px);
-  border-radius: 8px;
-  object-fit: cover;
-  display: block;
-}
-.pm-pop-title { margin: 0.35rem 0 0.1rem; font-size: 0.88rem; }
-.pm-pop-meta { margin: 0; color: var(--muted); font-size: 0.74rem; line-height: 1.25; }
+.pm-popup .leaflet-popup-tip { background: var(--surface); }
+.pm-popup .leaflet-popup-content { margin: 0.7rem 0.8rem; }
+.pm-pop-img { width: 100%; border-radius: 8px; display: block; }
+.pm-pop-title { margin: 0.5rem 0 0.15rem; font-size: 0.95rem; }
+.pm-pop-meta { margin: 0; color: var(--muted); font-size: 0.8rem; }
 
 /* Popup image doubles as the button that opens the full-size viewer. */
 .pm-pop-open {
@@ -1547,21 +1508,25 @@ footer {
   .pm-box-nav { width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
 }
 
-/* MapLibre's own chrome, retinted to the active palette. */
-.maplibregl-map { font: inherit; background: var(--card); }
-.maplibregl-ctrl-group {
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  box-shadow: none;
+/* Dark mode filters the colour basemap rather than swapping to a grey one.
+   The inversion darkens the land and flips the baked-in labels to light-on-
+   dark; the 180deg hue rotation puts the hues back roughly where they were, so
+   water stays blue and parks stay green instead of going orange and magenta.
+   Only the tile pane is filtered — markers and controls must not be. */
+.pm-map-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.96) contrast(0.88) saturate(0.8);
 }
-.maplibregl-ctrl-group button + button { border-top-color: var(--rule); }
-.maplibregl-ctrl-group button:not(:disabled):hover { background: var(--hover-tint); }
-[data-theme="dark"] .maplibregl-ctrl-icon { filter: invert(1); }
-.maplibregl-ctrl-attrib {
-  background: var(--surface);
-  color: var(--muted);
+
+/* Leaflet's own chrome, retinted to the active palette. */
+.leaflet-container { font: inherit; background: var(--card); }
+.leaflet-bar a,
+.leaflet-control-attribution {
+  background: var(--surface) !important;
+  color: var(--muted) !important;
+  border-color: var(--rule) !important;
 }
-.maplibregl-ctrl-attrib a { color: var(--accent-3); }
+.leaflet-bar a:hover { background: var(--hover-tint) !important; }
+.leaflet-control-attribution a { color: var(--accent-3) !important; }
 
 /* Composer — authoring helper, not an uploader (the site is static). */
 .pm-composer {
