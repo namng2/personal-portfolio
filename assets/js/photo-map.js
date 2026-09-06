@@ -175,8 +175,12 @@
     if (p.title) bits.push(`<h4 class="pm-pop-title">${esc(p.title)}</h4>`);
     const meta = [p.place, formatDate(p.date)].filter(Boolean).map(esc).join(" · ");
     if (meta) bits.push(`<p class="pm-pop-meta">${meta}</p>`);
+    const i = photos.indexOf(p);
     return (
+      `<button type="button" class="pm-pop-open" data-index="${i}" ` +
+      `aria-label="View ${escAttr(p.title || "photo")} full size">` +
       `<img class="pm-pop-img" src="${escAttr(photoSrc(p))}" alt="${escAttr(p.title || "")}">` +
+      `<span class="pm-pop-zoom" aria-hidden="true">View full size</span></button>` +
       bits.join("")
     );
   }
@@ -205,6 +209,103 @@
   function escAttr(s) {
     return esc(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
+
+  // ---- full-size viewer ---------------------------------------------------
+  // The popup is only ~320px wide, so the 2200px file is heavily downscaled
+  // there. This shows it at full size, and lets you go to 1:1 to inspect it.
+
+  let box = null, boxImg = null, boxCap = null, boxIndex = 0, boxReturn = null;
+
+  function buildBox() {
+    box = document.createElement("div");
+    box.className = "pm-box";
+    box.id = "pm-box";
+    box.hidden = true;
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    box.setAttribute("aria-label", "Photo viewer");
+    box.innerHTML =
+      '<button type="button" class="pm-box-close" aria-label="Close viewer">&#10005;</button>' +
+      '<button type="button" class="pm-box-nav pm-box-prev" aria-label="Previous photo">&#8249;</button>' +
+      '<button type="button" class="pm-box-nav pm-box-next" aria-label="Next photo">&#8250;</button>' +
+      '<div class="pm-box-stage"><img class="pm-box-img" alt=""></div>' +
+      '<p class="pm-box-cap"></p>';
+    boxImg = box.querySelector(".pm-box-img");
+    boxCap = box.querySelector(".pm-box-cap");
+
+    box.querySelector(".pm-box-close").addEventListener("click", closeBox);
+    box.querySelector(".pm-box-prev").addEventListener("click", () => step(-1));
+    box.querySelector(".pm-box-next").addEventListener("click", () => step(1));
+    // Clicking the backdrop closes; clicking the photo toggles 1:1.
+    box.addEventListener("click", (e) => { if (e.target === box) closeBox(); });
+    boxImg.addEventListener("click", () => {
+      box.classList.toggle("is-zoomed");
+      boxImg.setAttribute("aria-label", box.classList.contains("is-zoomed")
+        ? "Actual size. Select to fit to screen" : "Fit to screen. Select for actual size");
+    });
+    document.body.appendChild(box);
+  }
+
+  function showAt(i) {
+    const p = photos[i];
+    if (!p) return;
+    boxIndex = i;
+    box.classList.remove("is-zoomed");
+    boxImg.src = photoSrc(p);
+    boxImg.alt = p.title || "";
+    const meta = [p.place, formatDate(p.date)].filter(Boolean).join(" · ");
+    boxCap.textContent = [p.title, meta].filter(Boolean).join(" — ");
+    const many = photos.length > 1;
+    box.querySelector(".pm-box-prev").hidden = !many;
+    box.querySelector(".pm-box-next").hidden = !many;
+  }
+
+  const step = (d) => showAt((boxIndex + d + photos.length) % photos.length);
+
+  function openBox(i) {
+    if (!box) buildBox();
+    boxReturn = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    showAt(i);
+    box.hidden = false;
+    document.body.style.overflow = "hidden";
+    // Focused directly, not inside a frame callback: rAF does not run in a
+    // hidden document and the focus would simply be dropped.
+    box.querySelector(".pm-box-close").focus();
+    document.addEventListener("keydown", onBoxKey, true);
+  }
+
+  function closeBox() {
+    if (!box || box.hidden) return;
+    box.hidden = true;
+    box.classList.remove("is-zoomed");
+    boxImg.removeAttribute("src"); // stop decoding a 2200px image behind the map
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", onBoxKey, true);
+    boxReturn?.focus();
+    boxReturn = null;
+  }
+
+  function onBoxKey(e) {
+    if (box.hidden) return;
+    if (e.key === "Escape") { e.stopPropagation(); closeBox(); return; }
+    if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); return; }
+    if (e.key === "ArrowRight") { e.preventDefault(); step(1); return; }
+    if (e.key !== "Tab") return;
+    // Keep focus inside the dialog.
+    const f = [...box.querySelectorAll("button")].filter((b) => !b.hidden);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
+  // Delegated: Leaflet rebuilds popup markup each time one opens.
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest(".pm-pop-open");
+    if (!t) return;
+    e.preventDefault();
+    openBox(Number(t.dataset.index) || 0);
+  });
 
   // ---- reveal -------------------------------------------------------------
   // The panel is hidden until its tab is picked; Leaflet needs telling once it
