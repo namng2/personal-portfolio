@@ -9,7 +9,7 @@
   const body = document.getElementById("resume-render");
   const openers = document.querySelectorAll("[data-open-resume]");
   const closers = document.querySelectorAll("[data-close-resume]");
-  const printers = document.querySelectorAll("[data-print-resume]");
+  const RESUME_PDF = "assets/resume/resume.pdf";
   if (!modal || !body) return;
 
   // Kept as a promise rather than a boolean so printing can await the same
@@ -109,20 +109,19 @@
     t._timer = setTimeout(() => t.classList.remove("show"), 1600);
   }
 
-  // The print stylesheet hides everything except the resume modal, so printing
-  // while it is closed (or still loading) yields a blank sheet. Open it first,
-  // wait for the parse, then hand off to the browser's print dialog.
-  async function printResume(e) {
-    if (e) e.preventDefault();
-    if (!modal.classList.contains("open")) openModal();
-    await loadPromise;
-    window.print();
-  }
-  window.__printResume = printResume;
+  // Print / Save PDF hands over the committed PDF rather than printing this
+  // modal. The modal is a faithful reading of resume.tex, but it is HTML laid
+  // out by a browser: different fonts, metrics and pagination from the LaTeX
+  // original, so printing it produced a document that was visibly not the
+  // resume being sent to employers. The buttons are plain links to the file —
+  // no popup blocker, and cmd-click and middle-click behave normally. This
+  // exists only for the menu bar's "Print Resume…", which has no href.
+  // The browser's own PDF viewer then offers both print and download, and both
+  // are byte-identical to assets/resume/resume.pdf.
+  window.__printResume = () => window.open(RESUME_PDF, "_blank", "noopener");
 
   openers.forEach((b) => b.addEventListener("click", openModal));
   closers.forEach((b) => b.addEventListener("click", closeModal));
-  printers.forEach((b) => b.addEventListener("click", printResume));
   document.addEventListener("keydown", (e) => {
     if (!modal.classList.contains("open")) return;
     if (e.key === "Escape") {
