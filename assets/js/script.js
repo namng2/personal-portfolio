@@ -560,7 +560,7 @@ function particleColor(alpha) {
 
   // ---- opening and closing app windows -------------------------------------
   const everOpened = new Set();
-  function openApp(id, { focus = true } = {}) {
+  function openApp(id, { focus = true, animate = true } = {}) {
     const win = document.getElementById(id + "-app");
     if (!win) return;
     win.hidden = false;
@@ -572,6 +572,7 @@ function particleColor(alpha) {
       controllers.get(win)?.centre();
     }
     raise(win);
+    if (animate) flight(win, "in");
     if (focus) win.querySelector("[data-app-close]")?.focus();
     return win;
   }
@@ -579,13 +580,80 @@ function particleColor(alpha) {
   // next time: a minimised window comes back exactly where you left it, a
   // closed one comes back at its default size and position, which is what
   // closing and reopening an application usually gets you.
-  function hide(win) {
-    if (!win || win.hidden) return;
-    win.hidden = true;
-    const rest = wins.find((w) => !w.hidden);
-    if (rest) raise(rest);
-    else if (appNameEl) appNameEl.textContent = "Portfolio";
-    syncDock();
+  // ---- minimise / restore animation ----------------------------------------
+  const FLIGHT_MS = 280;
+
+  function dockRectFor(win) {
+    const item = dockItems.find((d) => resolve(d.dataset.dock) === win);
+    return item ? item.getBoundingClientRect() : null;
+  }
+
+  // The window shrinks toward its own dock icon and back out again. Pinning
+  // first gives a known starting transform: a window still held in place by the
+  // centring translate would otherwise fly from the wrong origin.
+  function flight(win, direction, done) {
+    const target = dockRectFor(win);
+    if (!target || compact() || prefersReducedMotion) return done && done();
+
+    controllers.get(win)?.pin();
+    const r = win.getBoundingClientRect();
+    const dx = target.left + target.width / 2 - (r.left + r.width / 2);
+    const dy = target.top + target.height / 2 - (r.top + r.height / 2);
+    const shrunk = `translate(${Math.round(dx)}px, ${Math.round(dy)}px) scale(0.05)`;
+
+    // Land the window explicitly rather than by clearing inline styles. A
+    // transition still in flight keeps the computed value at its start — the
+    // shrunk, transparent one — so simply removing the class can leave a
+    // window invisible at dock size. Killing the transition, forcing the final
+    // values, and committing them before restoring the stylesheet makes the
+    // end state unconditional.
+    const settle = () => {
+      win.classList.remove("window-anim");
+      win.style.transition = "none";
+      win.style.transform = "none";
+      win.style.opacity = "1";
+      void win.offsetWidth;
+      win.style.transition = "";
+      win.style.opacity = "";
+      done && done();
+    };
+
+    if (direction === "out") {
+      win.classList.add("window-anim");
+      void win.offsetWidth; // commit the start state before changing it
+      win.style.transform = shrunk;
+      win.style.opacity = "0";
+    } else {
+      win.style.transform = shrunk; // no transition yet — snap to the dock
+      win.style.opacity = "0";
+      void win.offsetWidth;
+      win.classList.add("window-anim");
+      win.style.transform = "none";
+      win.style.opacity = "1";
+    }
+
+    // transitionend alone is not enough: a transition that never runs — an
+    // interrupted one, or a document the browser is not painting — would leave
+    // the window stuck mid-flight and never hidden.
+    let settled = false;
+    const once = () => { if (!settled) { settled = true; settle(); } };
+    win.addEventListener("transitionend", once, { once: true });
+    setTimeout(once, FLIGHT_MS + 120);
+  }
+
+  function hide(win, animate = true) {
+    if (!win || win.hidden || win.dataset.flying) return;
+    const finish = () => {
+      delete win.dataset.flying;
+      win.hidden = true;
+      const rest = wins.find((w) => !w.hidden);
+      if (rest) raise(rest);
+      else if (appNameEl) appNameEl.textContent = "Portfolio";
+      syncDock();
+    };
+    if (!animate) return finish();
+    win.dataset.flying = "1";
+    flight(win, "out", finish);
   }
   function closeApp(id) {
     const win = resolve(id);
@@ -646,7 +714,7 @@ function particleColor(alpha) {
 
   const browserWin = document.querySelector(".browser");
   if (!compact() && browserWin) {
-    const mapWin = openApp("map", { focus: false });
+    const mapWin = openApp("map", { focus: false, animate: false });
     if (mapWin) tuckBehind(mapWin, browserWin);
     raise(browserWin); // the browser is what the visitor should read first
   }

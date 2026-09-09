@@ -407,6 +407,13 @@ html, body {
 .resize-handle[data-corner="ne"] { top: 0; right: 0; cursor: nesw-resize; }
 .resize-handle[data-corner="sw"] { bottom: 0; left: 0; cursor: nesw-resize; }
 .resize-handle[data-corner="se"] { bottom: 0; right: 0; cursor: nwse-resize; }
+/* Minimise flies the window down into its dock icon, and restore reverses it.
+   Pointer events are off in flight so a click cannot land on a window that is
+   halfway to the dock. */
+.window.window-anim {
+  transition: transform 0.28s cubic-bezier(0.32, 0.08, 0.24, 1), opacity 0.28s ease;
+  pointer-events: none;
+}
 .window.resizing-window { transition: none; }
 .window.maximized .resize-handle { display: none; }
 

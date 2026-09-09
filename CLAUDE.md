@@ -109,6 +109,13 @@ twice, so check them before debugging anything else:
   `.app-window` set `display: flex`, which beats the user-agent rule for
   `[hidden]`, so each needs its own `[hidden] { display: none }` or hiding it
   does nothing at all.
+- **End a transition by forcing its final values, not by clearing styles.**
+  Minimising flies the window into its dock icon. Removing the transition class
+  and clearing the inline `transform`/`opacity` looked right but left the
+  *computed* values stuck at the start of an unfinished transition — a window
+  invisible at dock size. Set `transition: none`, write the final values,
+  reflow, then restore the stylesheet. And always pair `transitionend` with a
+  timeout: in a document the browser is not painting, it never fires.
 - **Anything `raise()` touches must be hoisted.** `raise()` runs during init,
   before the dock block further down has been evaluated, so a `const` arrow
   there dies in the temporal dead zone and takes the whole module with it. Use
