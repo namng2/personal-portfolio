@@ -395,6 +395,14 @@ function particleColor(alpha) {
   const announce = () => window.dispatchEvent(new CustomEvent("windowresized"));
 
   const controllers = new Map();
+  const dockItems = [...document.querySelectorAll("[data-dock]")];
+
+  // A function declaration, not a const arrow: raise() calls syncDock() during
+  // init, before the dock block further down has been evaluated, so anything
+  // it reaches for has to be hoisted or the module dies in the dead zone.
+  function resolve(id) {
+    return document.getElementById(String(id).endsWith("-app") ? id : id + "-app");
+  }
   let z = 30;          // stays well under the menu bar at 500
   let focused = wins[0];
 
@@ -406,6 +414,7 @@ function particleColor(alpha) {
     focused = win;
     wins.forEach((w) => w.classList.toggle("is-focused", w === win));
     if (appNameEl) appNameEl.textContent = APP_NAMES[win.id] || "Portfolio";
+    syncDock();
     if (compact()) return;
     win.style.zIndex = ++z;
   }
@@ -541,6 +550,7 @@ function particleColor(alpha) {
     win.addEventListener("pointerdown", () => raise(win), true);
     win.querySelector("[data-app-zoom]")?.addEventListener("click", toggleZoom);
     win.querySelector("[data-app-close]")?.addEventListener("click", () => closeApp(win.id));
+    win.querySelector("[data-app-min]")?.addEventListener("click", () => minimizeApp(win.id));
 
     controllers.set(win, { pin, toggleZoom, centre });
   }
@@ -565,15 +575,51 @@ function particleColor(alpha) {
     if (focus) win.querySelector("[data-app-close]")?.focus();
     return win;
   }
-  function closeApp(id) {
-    const win = document.getElementById(id.endsWith("-app") ? id : id + "-app");
-    if (!win) return;
+  // Hiding is the same operation either way. The difference is what it means
+  // next time: a minimised window comes back exactly where you left it, a
+  // closed one comes back at its default size and position, which is what
+  // closing and reopening an application usually gets you.
+  function hide(win) {
+    if (!win || win.hidden) return;
     win.hidden = true;
     const rest = wins.find((w) => !w.hidden);
     if (rest) raise(rest);
+    else if (appNameEl) appNameEl.textContent = "Portfolio";
+    syncDock();
   }
+  function closeApp(id) {
+    const win = resolve(id);
+    everOpened.delete(win);
+    hide(win);
+  }
+  function minimizeApp(id) {
+    hide(resolve(id));
+  }
+
+  // ---- the dock ------------------------------------------------------------
+  function syncDock() {
+    dockItems.forEach((item) => {
+      const win = resolve(item.dataset.dock);
+      const open = !!win && !win.hidden;
+      item.classList.toggle("is-open", open);
+      item.classList.toggle("is-focused", open && win === focused);
+      item.setAttribute("aria-pressed", open ? "true" : "false");
+    });
+  }
+
+  dockItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      const win = resolve(item.dataset.dock);
+      if (!win) return;
+      if (win.hidden) openApp(item.dataset.dock);
+      else if (win !== focused) raise(win);
+      else minimizeApp(item.dataset.dock); // clicking the front app tucks it away
+    });
+  });
+
   window.__openApp = openApp;
   window.__closeApp = closeApp;
+  window.__minimizeApp = minimizeApp;
 
   // ---- the desktop starts with the Map already running ----------------------
   // A real desktop is not an empty screen with one window on it. The Map opens
@@ -594,6 +640,9 @@ function particleColor(alpha) {
     win.style.left = clamp(EDGE, r.right - w + 170, window.innerWidth - w - EDGE) + "px";
     win.style.top = clamp(topLimit() + EDGE, r.bottom - h + 130, window.innerHeight - h - EDGE) + "px";
   }
+
+  wins.forEach((w) => { if (!w.hidden) everOpened.add(w); });
+  syncDock();
 
   const browserWin = document.querySelector(".browser");
   if (!compact() && browserWin) {

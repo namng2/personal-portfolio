@@ -4,6 +4,7 @@
 :root {
   --max: 64rem;
   --menubar-h: 30px;
+  --dock-h: 68px;
 
   /* Desktop wallpaper. Swap the file in assets/img/ or set this to none.
      The dimming tint is a colour, so it lives in themes.css. */
@@ -360,11 +361,11 @@ html, body {
 .browser {
   position: fixed;
   /* Centred in the space below the menu bar, not pinned to the top of it */
-  top: calc(var(--menubar-h) + (100vh - var(--menubar-h)) / 2);
+  top: calc(var(--menubar-h) + (100vh - var(--menubar-h) - var(--dock-h)) / 2);
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(76rem, calc(100vw - 4rem));
-  height: min(900px, calc(100vh - var(--menubar-h) - 2.5rem));
+  height: min(900px, calc(100vh - var(--menubar-h) - var(--dock-h) - 1.5rem));
   display: flex;
   flex-direction: column;
   background: var(--surface);
@@ -382,12 +383,13 @@ html, body {
      only, to leave the height driven by the rules above. */
   container: shell / inline-size;
 }
+.browser[hidden] { display: none; }
 .window.maximized {
   top: var(--menubar-h);
   left: 0;
   transform: none;
   width: 100vw;
-  height: calc(100vh - var(--menubar-h));
+  height: calc(100vh - var(--menubar-h) - var(--dock-h));
   border-radius: 0;
 }
 /* Invisible bottom-right resize target, like a real window edge. */
@@ -1544,6 +1546,96 @@ footer {
 }
 
 /* --------------------------------------------------------------------------
+   Dock — the taskbar. Minimised windows live here; the lit dot under an icon
+   means that window is currently on screen.
+   -------------------------------------------------------------------------- */
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  z-index: 400;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 18px;
+  background: color-mix(in oklch, var(--surface) 66%, transparent);
+  border: 1px solid var(--rule);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.dock-item {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.dock-item:hover { transform: translateY(-6px) scale(1.08); }
+.dock-item:focus-visible { outline: 2px solid var(--accent-3); outline-offset: 3px; }
+.dock-icon {
+  font-size: 1.65rem;
+  line-height: 1;
+  /* Dimmed until its window is on screen, so the dock reads at a glance. */
+  filter: grayscale(0.4);
+  opacity: 0.6;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.dock-item.is-open .dock-icon { filter: none; opacity: 1; }
+.dock-dot {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.dock-item.is-open .dock-dot { opacity: 0.85; }
+.dock-item.is-focused .dock-dot { background: var(--accent-1); opacity: 1; }
+.dock-tip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.2rem 0.5rem;
+  border-radius: 7px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  color: var(--fg);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+.dock-item:hover .dock-tip,
+.dock-item:focus-visible .dock-tip { opacity: 1; }
+
+/* Windows are full-screen on a phone and would cover the dock completely,
+   leaving a minimise button with nowhere to minimise to. Both go away
+   together. This must sit after the .dock rules above: same specificity, so
+   source order decides, and an earlier media query loses. */
+@media (max-width: 640px) {
+  .dock { display: none; }
+  /* Matches `.window-controls .dot { display: inline-block }` — a bare
+     .dot-min loses to it on specificity and the button stays visible. */
+  .window-controls .dot-min { display: none; }
+}
+
+/* --------------------------------------------------------------------------
    The Map application window — a second window on the desktop, not a tab.
    Shares .window (drag/resize/focus) with .browser but keeps its own frame.
    -------------------------------------------------------------------------- */
@@ -1552,11 +1644,11 @@ footer {
      the map 32px clear of the window's own top edge. */
   padding: 0;
   position: fixed;
-  top: calc(var(--menubar-h) + (100vh - var(--menubar-h)) / 2);
+  top: calc(var(--menubar-h) + (100vh - var(--menubar-h) - var(--dock-h)) / 2);
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(62rem, calc(100vw - 6rem));
-  height: min(760px, calc(100vh - var(--menubar-h) - 4rem));
+  height: min(760px, calc(100vh - var(--menubar-h) - var(--dock-h) - 2.5rem));
   display: flex;
   flex-direction: column;
   background: var(--surface);

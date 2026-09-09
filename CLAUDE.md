@@ -87,12 +87,32 @@ lights. `__openApp(id)` / `__closeApp(id)` show and hide an app window by its
 `<id>-app` element; `__toggleZoom` and `__centerWindow` act on whichever window
 is in front.
 
-Two rules that cost time when broken:
+Minimising sends a window to the **dock** at the bottom; its icon lights when
+its window is on screen, and clicking it restores, focuses, or — if that window
+is already in front — tucks it away again. Close and minimise both just hide:
+the difference is that a closed window forgets its geometry and reopens at its
+default, a minimised one comes back exactly where you left it.
 
-- **A window's markup must be parsed before the scripts that look for it.**
-  Putting `#map-app` after the `<script>` tags left `photo-map.js` bailing at
-  its null guard and the manager registering only one window — no console
-  error, just a dead app.
+Three rules that cost time when broken. The first two have now each cost it
+twice, so check them before debugging anything else:
+
+- **New markup must be parsed before the scripts that look for it.** Putting
+  `#map-app`, and later the dock, after the `<script>` tags left `photo-map.js`
+  bailing at its null guard and `querySelectorAll("[data-dock]")` returning an
+  empty list. No console error either time — just a dead feature.
+- **A mobile override must sit after the rule it overrides.** Equal specificity
+  means source order decides, so an `@media (max-width: 640px)` block placed
+  earlier in the file silently loses to the desktop rule. It hit `.app-window`
+  and then `.dock`. Watch specificity too: `.dot-min` loses to
+  `.window-controls .dot`.
+- **`display` on a window outranks `[hidden]`.** Both `.browser` and
+  `.app-window` set `display: flex`, which beats the user-agent rule for
+  `[hidden]`, so each needs its own `[hidden] { display: none }` or hiding it
+  does nothing at all.
+- **Anything `raise()` touches must be hoisted.** `raise()` runs during init,
+  before the dock block further down has been evaluated, so a `const` arrow
+  there dies in the temporal dead zone and takes the whole module with it. Use
+  a `function` declaration.
 - **Window contents that measure themselves need telling when the window
   changes size.** The manager fires a `windowresized` event on `window` at the
   end of a resize, zoom or centre, and `photo-map.js` calls `map.resize()` on

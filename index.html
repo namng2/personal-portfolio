@@ -45,7 +45,7 @@
         integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="assets/css/themes.css?v=4" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=33" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=34" />
   <!-- Render-blocking on purpose: stamps the saved theme onto <html> before
        first paint, so the page never flashes the default palette first. It
        has to be a file, not inline, because the CSP above forbids inline
@@ -127,13 +127,13 @@
   <div id="cursor-ring" aria-hidden="true"></div>
   <div id="progress" aria-hidden="true"></div>
 
-  <div class="browser window" role="region" aria-label="Portfolio browser">
+  <div class="browser window" id="portfolio-app" role="region" aria-label="Portfolio browser">
     <!-- Window chrome -->
     <div class="browser-chrome">
-      <div class="window-controls" aria-hidden="true">
-        <span class="dot dot-close"></span>
-        <span class="dot dot-min"></span>
-        <span class="dot dot-max"></span>
+      <div class="window-controls">
+        <button type="button" class="dot dot-close" data-app-close aria-label="Close Portfolio" title="Close"></button>
+        <button type="button" class="dot dot-min" data-app-min aria-label="Minimise Portfolio" title="Minimise"></button>
+        <button type="button" class="dot dot-max" data-app-zoom aria-label="Zoom Portfolio" title="Zoom"></button>
       </div>
 
       <!-- Tab bar -->
@@ -415,7 +415,7 @@
     <header class="app-chrome">
       <div class="window-controls">
         <button type="button" class="dot dot-close" data-app-close aria-label="Close Map" title="Close"></button>
-        <span class="dot dot-min" aria-hidden="true"></span>
+        <button type="button" class="dot dot-min" data-app-min aria-label="Minimise Map" title="Minimise"></button>
         <button type="button" class="dot dot-max" data-app-zoom aria-label="Zoom Map" title="Zoom"></button>
       </div>
     </header>
@@ -469,6 +469,24 @@
     <div class="resize-handle" data-corner="se" aria-hidden="true"></div>
   </section>
 
+  <!-- ======================================================================
+       Dock — the taskbar. Minimising a window sends it here; clicking its
+       icon brings it back. The lit dot under an icon means that window is
+       on screen, so the dock doubles as the desktop's window list.
+       ====================================================================== -->
+  <nav class="dock" aria-label="Dock">
+    <button type="button" class="dock-item" data-dock="portfolio" aria-label="Portfolio">
+      <span class="dock-icon" aria-hidden="true">🌐</span>
+      <span class="dock-tip" aria-hidden="true">Portfolio</span>
+      <span class="dock-dot" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="dock-item" data-dock="map" aria-label="Map">
+      <span class="dock-icon" aria-hidden="true">🗺️</span>
+      <span class="dock-tip" aria-hidden="true">Map</span>
+      <span class="dock-dot" aria-hidden="true"></span>
+    </button>
+  </nav>
+
   <div id="resume-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="resume-title">
     <div class="modal-backdrop" data-close-resume></div>
     <div class="modal-box" role="document">
@@ -498,7 +516,7 @@
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="assets/js/theme.js?v=5"></script>
   <script src="assets/js/photo-map.js?v=25"></script>
-  <script src="assets/js/script.js?v=16"></script>
+  <script src="assets/js/script.js?v=17"></script>
   <script src="assets/js/resume.js?v=7"></script>
 
 </body>
