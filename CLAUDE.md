@@ -16,10 +16,10 @@ assets/css/themes.css   ALL colour: palettes + the derivation layer
 assets/css/styles.css   everything else; no colour literals belong here
 assets/js/boot-theme.js runs from <head> before paint; stops the theme flash
 assets/js/theme.js      appearance engine + the Control Centre popover
-assets/js/photo-map.js  Map tab: MapLibre + photo pins + the add-photo helper
+assets/js/photo-map.js  Map app: MapLibre + photo pins + the add-photo helper
 assets/data/photos.json the photo manifest (what the Map tab renders)
 assets/photos/          the photo files themselves
-assets/js/script.js     particles, cursor, tabs, window drag/resize, menu bar
+assets/js/script.js     particles, cursor, tabs, the window manager, menu bar
 assets/js/resume.js     fetches + parses resume.tex into the modal
 assets/resume/resume.tex  the resume content rendered into the modal
 assets/resume/resume.pdf  archival copy; the current UI prints the rendered resume
@@ -77,7 +77,34 @@ Gotchas found the hard way:
   dark, 3.1:1). A palette whose own fg/bg contrast is low drags its muted text
   under 3:1 — fix the seed, not the percentage.
 
+## Windows
+
+The desktop runs more than one window. Anything with `class="window"` is picked
+up by the window manager in `script.js`, which gives it dragging by its chrome,
+resizing from all four corners, zoom, centring, and a place in the stacking
+order — clicking a window brings it to the front and greys the other's traffic
+lights. `__openApp(id)` / `__closeApp(id)` show and hide an app window by its
+`<id>-app` element; `__toggleZoom` and `__centerWindow` act on whichever window
+is in front.
+
+Two rules that cost time when broken:
+
+- **A window's markup must be parsed before the scripts that look for it.**
+  Putting `#map-app` after the `<script>` tags left `photo-map.js` bailing at
+  its null guard and the manager registering only one window — no console
+  error, just a dead app.
+- **Window contents that measure themselves need telling when the window
+  changes size.** The manager fires a `windowresized` event on `window` at the
+  end of a resize, zoom or centre, and `photo-map.js` calls `map.resize()` on
+  it. ResizeObserver covers the live drag in a real browser but never fires in
+  the agent's pane, so it cannot be the only mechanism.
+
 ## The photo map
+
+**The map is its own application window, not a browser tab.** It is launched
+from the Home shortcut grid, the search box, or Window ▸ Open Map, and it
+builds on first reveal — the window starts `hidden`, and MapLibre cannot
+measure a container with no dimensions.
 
 MapLibre GL JS + OpenFreeMap vector tiles. **No API key by design** — the repo
 is public, so a key would be readable in source. Vector tiles are why the

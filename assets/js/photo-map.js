@@ -45,13 +45,12 @@
   // failed to serve MapLibre left visitors with a dead map AND a live-looking
   // "Add a photo…" button. Removal is not conditional on anything but the host.
   if (!IS_LOCAL) {
-    document.getElementById("pm-composer")?.remove();
-    document.getElementById("pm-add")?.remove();
+    document.getElementById("pm-foot")?.remove();
   }
 
-  const panel = document.querySelector('[data-panel="map"]');
+  const win = document.getElementById("map-app");
   const host = document.getElementById("photo-map");
-  if (!panel || !host) return;
+  if (!win || !host) return;
 
   // Say so rather than leaving an empty box. MapLibre is a ~1 MB script from a
   // CDN; when it does not arrive there is otherwise nothing on screen and
@@ -94,9 +93,8 @@
   };
 
   // ---- init ---------------------------------------------------------------
-  // Built on first reveal, not at load: the panel is display:none until its
-  // tab is opened, so before that the container has no dimensions to render
-  // into.
+  // Built on first reveal, not at load: the window starts hidden, and MapLibre
+  // cannot measure a container with no dimensions.
 
   function build() {
     if (map) return;
@@ -133,6 +131,12 @@
         });
       }).observe(host);
     }
+    // The desktop's window manager fires this when a window finishes resizing,
+    // is zoomed, or is re-centred. ResizeObserver above handles the live drag;
+    // this guarantees the canvas is square with its container once the gesture
+    // ends, without depending on a rendering-step callback having run.
+    window.addEventListener("windowresized", () => map.resize());
+
     // Composer-only, and gated on IS_LOCAL: onMapClick closes over `composer`,
     // which is never initialised on the deployed site.
     if (IS_LOCAL) map.on("click", onMapClick);
@@ -209,7 +213,7 @@
     } else if (pts.length > 1) {
       const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
       pts.forEach((c) => b.extend(c));
-      // animate:false so the fit lands even while the panel is mid-reveal —
+      // animate:false so the fit lands even while the window is mid-reveal —
       // an eased flight can be interrupted and leave the view somewhere else.
       map.fitBounds(b, { padding: 60, maxZoom: 14, animate: false });
     }
@@ -369,16 +373,16 @@
   });
 
   // ---- reveal -------------------------------------------------------------
-  // The panel is hidden until its tab is picked; MapLibre needs telling once
-  // it has real dimensions or it renders into a zero-sized canvas.
+  // The window is hidden until the app is launched; MapLibre needs telling
+  // once it has real dimensions or it renders into a zero-sized canvas.
 
   new MutationObserver(() => {
-    if (!panel.classList.contains("active")) return;
+    if (win.hidden) return;
     build();
     requestAnimationFrame(() => map?.resize());
-  }).observe(panel, { attributes: true, attributeFilter: ["class"] });
+  }).observe(win, { attributes: true, attributeFilter: ["hidden"] });
 
-  if (panel.classList.contains("active")) build();
+  if (!win.hidden) build();
 
   // ---- composer -----------------------------------------------------------
   // Author-only. Nothing here could ever publish for a visitor — the composer

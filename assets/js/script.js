@@ -373,181 +373,214 @@ function particleColor(alpha) {
 // --------------------------------------------------------------------------
 // Draggable browser window — grab the chrome strip to move it around
 // --------------------------------------------------------------------------
-(function draggableWindow() {
-  const browser = document.querySelector(".browser");
-  const chrome = browser?.querySelector(".browser-chrome");
-  if (!browser || !chrome) return;
-  if (window.matchMedia("(max-width: 640px)").matches) return;
-
-  let dragging = false;
-  let pointerId = null;
-  let startX = 0, startY = 0;
-  let originLeft = 0, originTop = 0;
-
-  // Convert the centering transform to absolute left/top on first interaction
-  // so subsequent drags are coordinate-based.
-  let pinned = false;
-  function pin() {
-    if (pinned) return;
-    const r = browser.getBoundingClientRect();
-    browser.style.transform = "none";
-    browser.style.left = r.left + "px";
-    browser.style.top = r.top + "px";
-    pinned = true;
-  }
-
-  chrome.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
-    // Don't hijack drags on tabs, the new-tab button, or any nested control
-    if (e.target.closest(".tab[data-tab], .tab-new, button, input")) return;
-    pin();
-    dragging = true;
-    pointerId = e.pointerId;
-    startX = e.clientX;
-    startY = e.clientY;
-    const r = browser.getBoundingClientRect();
-    originLeft = r.left;
-    originTop = r.top;
-    browser.classList.add("dragging-window");
-    chrome.setPointerCapture(pointerId);
-  });
-
-  chrome.addEventListener("pointermove", (e) => {
-    if (!dragging || e.pointerId !== pointerId) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    const w = browser.offsetWidth;
-    const h = browser.offsetHeight;
-    // Keep at least 80px horizontally and 40px vertically on screen
-    const minLeft = 80 - w;
-    const maxLeft = window.innerWidth - 80;
-    // Don't let the window slide underneath the menu bar
-    const minTop = parseInt(
-      getComputedStyle(document.documentElement).getPropertyValue("--menubar-h"), 10
-    ) || 30;
-    const maxTop = window.innerHeight - 40;
-    const nl = Math.max(minLeft, Math.min(maxLeft, originLeft + dx));
-    const nt = Math.max(minTop, Math.min(maxTop, originTop + dy));
-    browser.style.left = nl + "px";
-    browser.style.top = nt + "px";
-  });
-
-  function endDrag(e) {
-    if (!dragging) return;
-    if (e && e.pointerId !== pointerId) return;
-    try { chrome.releasePointerCapture(pointerId); } catch (_) {}
-    dragging = false;
-    pointerId = null;
-    browser.classList.remove("dragging-window");
-  }
-  chrome.addEventListener("pointerup", endDrag);
-  chrome.addEventListener("pointercancel", endDrag);
-
-  // Menu bar "Center Window" hands control back to the CSS centering rules.
-  window.__centerWindow = () => {
-    browser.style.left = "";
-    browser.style.top = "";
-    browser.style.transform = "";
-    pinned = false;
-  };
-
-  // Resizing anchors the top-left corner, so it needs the same conversion from
-  // the centering transform to absolute coordinates that dragging does.
-  window.__pinWindow = pin;
-})();
-
-// --------------------------------------------------------------------------
-// Resizable browser window — drag the bottom-right grip
-// --------------------------------------------------------------------------
-(function resizableWindow() {
-  const browser = document.querySelector(".browser");
-  const handles = [...(browser?.querySelectorAll(".resize-handle") || [])];
-  if (!browser || !handles.length) return;
-  if (window.matchMedia("(max-width: 640px)").matches) return;
+(function windowManager() {
+  // One manager for every .window on the desktop — the browser and the Map
+  // app. Each gets its own drag, resize and zoom state; the desktop keeps a
+  // single stacking order so the last window touched comes to the front.
+  const wins = [...document.querySelectorAll(".window")];
+  if (!wins.length) return;
 
   const MIN_W = 420;
   const MIN_H = 320;
   const EDGE = 8; // breathing room against the viewport
+  const compact = () => window.matchMedia("(max-width: 640px)").matches;
   const topLimit = () =>
     parseInt(getComputedStyle(document.documentElement).getPropertyValue("--menubar-h"), 10) || 0;
 
-  // Track the window as four edges rather than an origin plus a size. Dragging
-  // a corner moves two of them and leaves the opposite two pinned, which is
-  // what makes the far corner stay put — and it keeps the minimum size from
-  // pushing the window sideways once it stops shrinking.
-  let drag = null;
+  // Contents that measure themselves — the map's WebGL canvas — need telling
+  // when their window changes size. ResizeObserver covers the live drag, but
+  // this fires the moment a gesture ends so nothing can be left stale, and it
+  // is targeted rather than a synthetic window "resize", which would pointlessly
+  // re-seed the particle field and close any open menu.
+  const announce = () => window.dispatchEvent(new CustomEvent("windowresized"));
 
-  handles.forEach((handle) => {
-    handle.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0) return;
-      e.preventDefault();
-      e.stopPropagation();
-      // Pin first: while the window is still centred by a transform, resizing
-      // it would grow from the middle instead of from the dragged corner.
-      window.__pinWindow?.();
-      browser.classList.remove("maximized");
+  const controllers = new Map();
+  let z = 30;          // stays well under the menu bar at 500
+  let focused = wins[0];
 
-      const r = browser.getBoundingClientRect();
-      drag = {
-        handle,
-        id: e.pointerId,
-        corner: handle.dataset.corner || "se",
-        x: e.clientX,
-        y: e.clientY,
-        left: r.left, top: r.top, right: r.right, bottom: r.bottom,
-      };
-      browser.classList.add("resizing-window");
-      handle.setPointerCapture(e.pointerId);
-    });
+  function raise(win) {
+    focused = win;
+    wins.forEach((w) => w.classList.toggle("is-focused", w === win));
+    if (compact()) return;
+    win.style.zIndex = ++z;
+  }
 
-    handle.addEventListener("pointermove", (e) => {
-      if (!drag || e.pointerId !== drag.id) return;
-      const dx = e.clientX - drag.x;
-      const dy = e.clientY - drag.y;
-      const c = drag.corner;
+  function build(win) {
+    const chrome = win.querySelector(".browser-chrome, .app-chrome");
+    const handles = [...win.querySelectorAll(".resize-handle")];
 
-      let { left, top, right, bottom } = drag;
-      if (c.includes("w")) left = Math.min(drag.left + dx, drag.right - MIN_W);
-      if (c.includes("e")) right = Math.max(drag.right + dx, drag.left + MIN_W);
-      if (c.includes("n")) top = Math.min(drag.top + dy, drag.bottom - MIN_H);
-      if (c.includes("s")) bottom = Math.max(drag.bottom + dy, drag.top + MIN_H);
-
-      left = Math.max(EDGE, left);
-      top = Math.max(topLimit() + EDGE, top);
-      right = Math.min(window.innerWidth - EDGE, right);
-      bottom = Math.min(window.innerHeight - EDGE, bottom);
-
-      browser.style.left = left + "px";
-      browser.style.top = top + "px";
-      browser.style.width = Math.max(MIN_W, right - left) + "px";
-      browser.style.height = Math.max(MIN_H, bottom - top) + "px";
-    });
-
-    const end = (e) => {
-      if (!drag || (e && e.pointerId !== drag.id)) return;
-      try { drag.handle.releasePointerCapture(drag.id); } catch (_) {}
-      drag = null;
-      browser.classList.remove("resizing-window");
-    };
-    handle.addEventListener("pointerup", end);
-    handle.addEventListener("pointercancel", end);
-  });
-
-  // Zoom toggles fullscreen, remembering the size to come back to. Inline
-  // width/height would otherwise win over the .maximized rules.
-  let restore = null;
-  window.__toggleZoom = () => {
-    if (browser.classList.contains("maximized")) {
-      browser.classList.remove("maximized");
-      if (restore) Object.assign(browser.style, restore);
-      restore = null;
-    } else {
-      const s = browser.style;
-      restore = { width: s.width, height: s.height, left: s.left, top: s.top, transform: s.transform };
-      ["width", "height", "left", "top", "transform"].forEach((p) => (browser.style[p] = ""));
-      browser.classList.add("maximized");
+    // Centring is a CSS transform; dragging and resizing both need real
+    // left/top first, or the window grows from its middle instead of from the
+    // corner under the pointer.
+    let pinned = false;
+    function pin() {
+      if (pinned) return;
+      const r = win.getBoundingClientRect();
+      win.style.transform = "none";
+      win.style.left = r.left + "px";
+      win.style.top = r.top + "px";
+      pinned = true;
     }
-  };
+
+    // ---- drag by the chrome ------------------------------------------------
+    let drag = null;
+    chrome?.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || compact()) return;
+      // Never hijack a drag that started on a control inside the chrome.
+      if (e.target.closest(".tab[data-tab], .tab-new, button, input")) return;
+      pin();
+      const r = win.getBoundingClientRect();
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: r.left, top: r.top };
+      win.classList.add("dragging-window");
+      try { chrome.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+
+    chrome?.addEventListener("pointermove", (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const w = win.offsetWidth;
+      // Keep at least 80px horizontally and 40px vertically reachable, and
+      // never let the title bar slide under the menu bar.
+      const nl = Math.max(80 - w, Math.min(window.innerWidth - 80, drag.left + e.clientX - drag.x));
+      const nt = Math.max(topLimit(), Math.min(window.innerHeight - 40, drag.top + e.clientY - drag.y));
+      win.style.left = nl + "px";
+      win.style.top = nt + "px";
+    });
+
+    const endDrag = (e) => {
+      if (!drag || (e && e.pointerId !== drag.id)) return;
+      try { chrome.releasePointerCapture(drag.id); } catch (_) {}
+      drag = null;
+      win.classList.remove("dragging-window");
+    };
+    chrome?.addEventListener("pointerup", endDrag);
+    chrome?.addEventListener("pointercancel", endDrag);
+
+    // ---- resize from any corner -------------------------------------------
+    // Tracked as four edges rather than an origin plus a size: a corner drag
+    // moves two of them and pins the opposite two, which is what keeps the far
+    // corner still and stops the minimum size shunting the window sideways.
+    let rs = null;
+    handles.forEach((handle) => {
+      handle.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0 || compact()) return;
+        e.preventDefault();
+        e.stopPropagation();
+        pin();
+        win.classList.remove("maximized");
+        const r = win.getBoundingClientRect();
+        rs = {
+          handle, id: e.pointerId, corner: handle.dataset.corner || "se",
+          x: e.clientX, y: e.clientY,
+          left: r.left, top: r.top, right: r.right, bottom: r.bottom,
+        };
+        win.classList.add("resizing-window");
+        try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      });
+
+      handle.addEventListener("pointermove", (e) => {
+        if (!rs || e.pointerId !== rs.id) return;
+        const dx = e.clientX - rs.x;
+        const dy = e.clientY - rs.y;
+        const c = rs.corner;
+        let { left, top, right, bottom } = rs;
+        if (c.includes("w")) left = Math.min(rs.left + dx, rs.right - MIN_W);
+        if (c.includes("e")) right = Math.max(rs.right + dx, rs.left + MIN_W);
+        if (c.includes("n")) top = Math.min(rs.top + dy, rs.bottom - MIN_H);
+        if (c.includes("s")) bottom = Math.max(rs.bottom + dy, rs.top + MIN_H);
+
+        left = Math.max(EDGE, left);
+        top = Math.max(topLimit() + EDGE, top);
+        right = Math.min(window.innerWidth - EDGE, right);
+        bottom = Math.min(window.innerHeight - EDGE, bottom);
+
+        win.style.left = left + "px";
+        win.style.top = top + "px";
+        win.style.width = Math.max(MIN_W, right - left) + "px";
+        win.style.height = Math.max(MIN_H, bottom - top) + "px";
+      });
+
+      const endResize = (e) => {
+        if (!rs || (e && e.pointerId !== rs.id)) return;
+        try { rs.handle.releasePointerCapture(rs.id); } catch (_) {}
+        rs = null;
+        win.classList.remove("resizing-window");
+        announce();
+      };
+      handle.addEventListener("pointerup", endResize);
+      handle.addEventListener("pointercancel", endResize);
+    });
+
+    // ---- zoom / centre -----------------------------------------------------
+    let restore = null;
+    function toggleZoom() {
+      if (win.classList.contains("maximized")) {
+        win.classList.remove("maximized");
+        if (restore) Object.assign(win.style, restore);
+        restore = null;
+      } else {
+        const st = win.style;
+        restore = { width: st.width, height: st.height, left: st.left, top: st.top, transform: st.transform };
+        ["width", "height", "left", "top", "transform"].forEach((k) => (win.style[k] = ""));
+        win.classList.add("maximized");
+      }
+      announce();
+    }
+    function centre() {
+      ["left", "top", "width", "height", "transform"].forEach((k) => (win.style[k] = ""));
+      win.classList.remove("maximized");
+      pinned = false;
+      announce();
+    }
+
+    // Touching anywhere in a window brings it forward.
+    win.addEventListener("pointerdown", () => raise(win), true);
+    win.querySelector("[data-app-zoom]")?.addEventListener("click", toggleZoom);
+    win.querySelector("[data-app-close]")?.addEventListener("click", () => closeApp(win.id));
+
+    controllers.set(win, { pin, toggleZoom, centre });
+  }
+
+  wins.forEach(build);
+  raise(wins[wins.length - 1]);
+
+  // ---- opening and closing app windows -------------------------------------
+  const everOpened = new Set();
+  function openApp(id) {
+    const win = document.getElementById(id + "-app");
+    if (!win) return;
+    win.hidden = false;
+    // Only the very first open is centred. Keying this off `hidden` would
+    // re-centre on every reopen, throwing away wherever the window had been
+    // dragged to — closing and reopening should not move it.
+    if (!everOpened.has(win)) {
+      everOpened.add(win);
+      controllers.get(win)?.centre();
+    }
+    raise(win);
+    win.querySelector("[data-app-close]")?.focus();
+  }
+  function closeApp(id) {
+    const win = document.getElementById(id.endsWith("-app") ? id : id + "-app");
+    if (!win) return;
+    win.hidden = true;
+    const rest = wins.find((w) => !w.hidden);
+    if (rest) raise(rest);
+  }
+  window.__openApp = openApp;
+  window.__closeApp = closeApp;
+
+  // The menu bar acts on whichever window is in front.
+  window.__pinWindow = () => controllers.get(focused)?.pin();
+  window.__centerWindow = () => controllers.get(focused)?.centre();
+  window.__toggleZoom = () => controllers.get(focused)?.toggleZoom();
+
+  // Anything marked data-app="map" is a launcher for that window.
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-app]");
+    if (!t) return;
+    e.preventDefault();
+    openApp(t.dataset.app);
+  });
 })();
 
 // --------------------------------------------------------------------------
@@ -647,18 +680,22 @@ function particleColor(alpha) {
   const lucky = document.getElementById("lucky-btn");
   const box = form;
 
-  const targets = ["home", "about", "skills", "projects", "map", "contact", "resume"];
+  const tabTargets = ["home", "about", "skills", "projects", "contact", "resume"];
+  // The map is no longer a tab — searching for it launches the app window, so
+  // every route to it has to go through __openApp rather than __activateTab.
+  const openMap = () => window.__openApp?.("map");
 
   function go(query) {
     const q = (query || "").trim().toLowerCase();
     if (!q) return;
+    if (q === "map" || q === "maps" || q === "photo map") return openMap();
     // Direct tab name match
-    if (targets.includes(q)) return window.__activateTab(q);
+    if (tabTargets.includes(q)) return window.__activateTab(q);
     // Keyword aliases
     if (/(work|exp|me|bio)/.test(q)) return window.__activateTab("about");
     if (/(stack|tech|lang)/.test(q)) return window.__activateTab("skills");
     if (/(proj|build|portfolio|github)/.test(q)) return window.__activateTab("projects");
-    if (/(photo|pic|shot|place|travel|camera)/.test(q)) return window.__activateTab("map");
+    if (/(photo|pic|shot|place|travel|camera)/.test(q)) return openMap();
     if (/(mail|email|reach|find|social)/.test(q)) return window.__activateTab("contact");
     if (/(cv|resume|hire)/.test(q)) return window.__activateTab("resume");
     // Fallback: projects
@@ -678,8 +715,10 @@ function particleColor(alpha) {
     go(input.value);
   });
   lucky?.addEventListener("click", () => {
-    const pool = targets.filter((t) => t !== "home");
-    window.__activateTab(pool[Math.floor(Math.random() * pool.length)]);
+    const pool = [...tabTargets.filter((t) => t !== "home"), "map"];
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if (pick === "map") return openMap();
+    window.__activateTab(pick);
   });
 })();
 
@@ -817,9 +856,8 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       { label: "About", key: "⌘2", run: () => go("about") },
       { label: "Skills", key: "⌘3", run: () => go("skills") },
       { label: "Projects", key: "⌘4", run: () => go("projects") },
-      { label: "Photo Map", key: "⌘5", run: () => go("map") },
-      { label: "Contact", key: "⌘6", run: () => go("contact") },
-      { label: "Resume", key: "⌘7", run: () => go("resume") },
+      { label: "Contact", key: "⌘5", run: () => go("contact") },
+      { label: "Resume", key: "⌘6", run: () => go("resume") },
       { sep: true },
       { heading: "Appearance" },
       ...appearanceItems,
@@ -827,6 +865,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
       { label: "Reload", key: "⌘R", run: () => click('[data-nav="reload"]') },
     ],
     window: [
+      { label: "Open Map", run: () => window.__openApp?.("map") },
       { label: "Zoom", run: () => window.__toggleZoom?.() },
       { label: "Center Window", run: () => window.__centerWindow?.() },
     ],

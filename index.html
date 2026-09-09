@@ -45,7 +45,7 @@
         integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="assets/css/themes.css?v=4" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=31" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=32" />
   <!-- Render-blocking on purpose: stamps the saved theme onto <html> before
        first paint, so the page never flashes the default palette first. It
        has to be a file, not inline, because the CSP above forbids inline
@@ -127,7 +127,7 @@
   <div id="cursor-ring" aria-hidden="true"></div>
   <div id="progress" aria-hidden="true"></div>
 
-  <div class="browser" role="region" aria-label="Portfolio browser">
+  <div class="browser window" role="region" aria-label="Portfolio browser">
     <!-- Window chrome -->
     <div class="browser-chrome">
       <div class="window-controls" aria-hidden="true">
@@ -153,10 +153,6 @@
         <button class="tab" id="tab-projects" role="tab" data-tab="projects"
                 aria-selected="false" aria-controls="panel-projects" tabindex="-1">
           <span class="tab-icon">🚀</span><span class="tab-label">Projects</span>
-        </button>
-        <button class="tab" id="tab-map" role="tab" data-tab="map"
-                aria-selected="false" aria-controls="panel-map" tabindex="-1">
-          <span class="tab-icon">🗺️</span><span class="tab-label">Map</span>
         </button>
         <button class="tab" id="tab-contact" role="tab" data-tab="contact"
                 aria-selected="false" aria-controls="panel-contact" tabindex="-1">
@@ -240,7 +236,7 @@
               <span class="shortcut-icon">🚀</span>
               <span class="shortcut-label">Projects</span>
             </button>
-            <button class="shortcut" data-goto="map">
+            <button class="shortcut" data-app="map">
               <span class="shortcut-icon">🗺️</span>
               <span class="shortcut-label">Photo Map</span>
             </button>
@@ -372,58 +368,6 @@
         </div>
       </section>
 
-      <!-- PHOTO MAP -->
-      <section class="panel" id="panel-map" role="tabpanel"
-               aria-labelledby="tab-map" data-panel="map" tabindex="0" hidden>
-        <h2>Photo Map</h2>
-        <p class="lede">Places I have pointed a camera at. Pick a thumbnail to see the shot.</p>
-
-        <div class="pm-stage">
-          <div id="photo-map" class="pm-map" role="region" aria-label="Map of photo locations"></div>
-          <p id="pm-empty" class="pm-empty" hidden>
-            No photographs published yet — check back as the map grows.
-          </p>
-        </div>
-
-        <div class="pm-bar">
-          <span id="pm-count" class="pm-count"></span>
-          <button type="button" class="btn ghost small" id="pm-add">Add a photo…</button>
-        </div>
-
-        <!-- Authoring helper. The site is static, so this does not upload:
-             it works out the entry for assets/data/photos.json and hands it
-             over to paste in alongside the image file. -->
-        <div id="pm-composer" class="pm-composer" hidden>
-          <h3 class="pm-composer-title">Add a photo</h3>
-          <ol class="pm-steps">
-            <li>
-              <label class="pm-file">
-                <input type="file" id="pm-file" accept="image/jpeg,image/png,image/webp" />
-                <span>Choose an image</span>
-              </label>
-              <span id="pm-file-note" class="pm-note"></span>
-            </li>
-            <li>Click the map to set where it was taken (auto-filled if the photo has GPS).</li>
-            <li>
-              <div class="pm-fields">
-                <label>Title <input type="text" id="pm-title" placeholder="Golden Gate at dusk" /></label>
-                <label>Place <input type="text" id="pm-place" placeholder="San Francisco, CA" /></label>
-                <label>Date <input type="date" id="pm-date" /></label>
-              </div>
-            </li>
-            <li>
-              Save the image to <code>assets/photos/</code>, then paste this into
-              <code>assets/data/photos.json</code>:
-              <pre class="pm-out"><code id="pm-json">Choose an image to begin.</code></pre>
-              <div class="pm-actions">
-                <button type="button" class="btn ghost small" id="pm-copy">Copy JSON</button>
-                <button type="button" class="btn ghost small" id="pm-cancel">Close</button>
-              </div>
-            </li>
-          </ol>
-        </div>
-      </section>
-
       <!-- CONTACT -->
       <section class="panel" id="panel-contact" role="tabpanel"
                aria-labelledby="tab-contact" data-panel="contact" tabindex="0" hidden>
@@ -461,6 +405,71 @@
   </div>
 
   <!-- Resume modal -->
+  <!-- ======================================================================
+       Map — a second application window rather than a browser tab. It opens
+       with the map already live, so it can be panned and zoomed immediately.
+       Shares the .window class with .browser: that is the hook the window
+       manager in script.js binds dragging, resizing and focus to.
+       ====================================================================== -->
+  <section class="window app-window" id="map-app" aria-label="Map" hidden>
+    <header class="app-chrome">
+      <div class="window-controls">
+        <button type="button" class="dot dot-close" data-app-close aria-label="Close Map" title="Close"></button>
+        <span class="dot dot-min" aria-hidden="true"></span>
+        <button type="button" class="dot dot-max" data-app-zoom aria-label="Zoom Map" title="Zoom"></button>
+      </div>
+      <span class="app-title"><span aria-hidden="true">🗺️</span> Map</span>
+      <span class="app-count" id="pm-count"></span>
+    </header>
+
+    <div class="app-body">
+      <div id="photo-map" class="pm-map" role="region" aria-label="Map of photo locations"></div>
+      <p id="pm-empty" class="pm-empty" hidden>
+            No photographs published yet — check back as the map grows.
+          </p>
+    </div>
+
+    <!-- Authoring helper, author-only: photo-map.js removes this whole footer
+         unless the page is served from localhost. -->
+    <div class="app-foot" id="pm-foot">
+      <button type="button" class="btn ghost small" id="pm-add">Add a photo…</button>
+  <div id="pm-composer" class="pm-composer" hidden>
+            <h3 class="pm-composer-title">Add a photo</h3>
+            <ol class="pm-steps">
+              <li>
+                <label class="pm-file">
+                  <input type="file" id="pm-file" accept="image/jpeg,image/png,image/webp" />
+                  <span>Choose an image</span>
+                </label>
+                <span id="pm-file-note" class="pm-note"></span>
+              </li>
+              <li>Click the map to set where it was taken (auto-filled if the photo has GPS).</li>
+              <li>
+                <div class="pm-fields">
+                  <label>Title <input type="text" id="pm-title" placeholder="Golden Gate at dusk" /></label>
+                  <label>Place <input type="text" id="pm-place" placeholder="San Francisco, CA" /></label>
+                  <label>Date <input type="date" id="pm-date" /></label>
+                </div>
+              </li>
+              <li>
+                Save the image to <code>assets/photos/</code>, then paste this into
+                <code>assets/data/photos.json</code>:
+                <pre class="pm-out"><code id="pm-json">Choose an image to begin.</code></pre>
+                <div class="pm-actions">
+                  <button type="button" class="btn ghost small" id="pm-copy">Copy JSON</button>
+                  <button type="button" class="btn ghost small" id="pm-cancel">Close</button>
+                </div>
+              </li>
+            </ol>
+          </div>
+    </div>
+
+    <div class="resize-handle" data-corner="nw" aria-hidden="true"></div>
+    <div class="resize-handle" data-corner="ne" aria-hidden="true"></div>
+    <div class="resize-handle" data-corner="sw" aria-hidden="true"></div>
+    <div class="resize-handle" data-corner="se" aria-hidden="true"></div>
+  </section>
+
   <div id="resume-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="resume-title">
     <div class="modal-backdrop" data-close-resume></div>
     <div class="modal-box" role="document">
@@ -489,8 +498,9 @@
           integrity="sha512-hoXlvOdSmh58mppUyZHZsscHkR/yXl6zLpTMTNwA6IZ61DpeaCNjosRu1WJ2DeIpkfW5MsJJ9H89zjV4IBGqRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="assets/js/theme.js?v=5"></script>
-  <script src="assets/js/photo-map.js?v=23"></script>
-  <script src="assets/js/script.js?v=13"></script>
+  <script src="assets/js/photo-map.js?v=24"></script>
+  <script src="assets/js/script.js?v=14"></script>
   <script src="assets/js/resume.js?v=7"></script>
+
 </body>
 </html>
