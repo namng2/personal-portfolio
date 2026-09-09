@@ -398,9 +398,14 @@ function particleColor(alpha) {
   let z = 30;          // stays well under the menu bar at 500
   let focused = wins[0];
 
+  // macOS names the frontmost application in the menu bar; so does this.
+  const APP_NAMES = { "map-app": "Map" };
+  const appNameEl = document.querySelector(".mb-app");
+
   function raise(win) {
     focused = win;
     wins.forEach((w) => w.classList.toggle("is-focused", w === win));
+    if (appNameEl) appNameEl.textContent = APP_NAMES[win.id] || "Portfolio";
     if (compact()) return;
     win.style.zIndex = ++z;
   }

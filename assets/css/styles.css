@@ -1548,6 +1548,9 @@ footer {
    Shares .window (drag/resize/focus) with .browser but keeps its own frame.
    -------------------------------------------------------------------------- */
 .app-window {
+  /* The window is a <section>, and `section { padding: 2rem 0 }` was pushing
+     the map 32px clear of the window's own top edge. */
+  padding: 0;
   position: fixed;
   top: calc(var(--menubar-h) + (100vh - var(--menubar-h)) / 2);
   left: 50%;
@@ -1569,20 +1572,57 @@ footer {
    [hidden]. Without this the window never actually hides. */
 .app-window[hidden] { display: none; }
 
+/* No title bar. Apple Maps runs the map to all four edges and floats the
+   traffic lights over it, so this strip is transparent and out of flow — the
+   map fills the whole window. It survives only as the drag region, which is
+   all a title bar really is. */
 .app-chrome {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 40px;
+  z-index: 5;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.4rem 0.85rem;
-  background: linear-gradient(180deg, var(--chrome-bg), var(--chrome-bg-2));
-  border-bottom: 1px solid var(--rule);
+  padding-left: 0.6rem;
+  background: none;
+  border: 0;
   cursor: grab;
   user-select: none;
-  flex: none;
 }
-.app-chrome .window-controls { padding: 0; }
-.app-title { font-weight: 600; font-size: 0.82rem; }
-.app-count { margin-left: auto; color: var(--muted); font-size: 0.75rem; }
+/* The strip spans the full width so the window can be dragged from anywhere
+   along its top, which would otherwise swallow clicks on the zoom buttons —
+   so the map's own controls are lifted above it. */
+.app-window .maplibregl-ctrl-top-right { z-index: 6; top: 0.4rem; right: 0.4rem; }
+.app-window .maplibregl-ctrl-group { border-radius: 10px; overflow: hidden; }
+
+/* Over a map the lights need their own ground to stay legible — Apple's sit on
+   an opaque sidebar and do not. */
+.app-window .window-controls {
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--surface) 76%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.22);
+}
+
+/* The photo count becomes a floating pill rather than a title-bar field. */
+.app-count {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.6rem;
+  z-index: 5;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--surface) 76%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+  color: var(--muted);
+  font-size: 0.72rem;
+  pointer-events: none;
+}
+.app-count:empty { display: none; }
 
 /* The map fills the window: opening the app should land you on a live map,
    not on a page with a map somewhere in it. */
