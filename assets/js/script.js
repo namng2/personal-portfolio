@@ -545,7 +545,7 @@ function particleColor(alpha) {
 
   // ---- opening and closing app windows -------------------------------------
   const everOpened = new Set();
-  function openApp(id) {
+  function openApp(id, { focus = true } = {}) {
     const win = document.getElementById(id + "-app");
     if (!win) return;
     win.hidden = false;
@@ -557,7 +557,8 @@ function particleColor(alpha) {
       controllers.get(win)?.centre();
     }
     raise(win);
-    win.querySelector("[data-app-close]")?.focus();
+    if (focus) win.querySelector("[data-app-close]")?.focus();
+    return win;
   }
   function closeApp(id) {
     const win = document.getElementById(id.endsWith("-app") ? id : id + "-app");
@@ -568,6 +569,33 @@ function particleColor(alpha) {
   }
   window.__openApp = openApp;
   window.__closeApp = closeApp;
+
+  // ---- the desktop starts with the Map already running ----------------------
+  // A real desktop is not an empty screen with one window on it. The Map opens
+  // behind the browser, offset far enough that a corner and its shadow show, so
+  // it reads as a second running app and can be clicked to the front.
+  // Not on phones: windows are full-screen there, so an auto-opened app would
+  // simply hide the site behind it.
+  function tuckBehind(win, ref) {
+    controllers.get(win)?.pin();
+    const r = ref.getBoundingClientRect();
+    const w = win.offsetWidth, h = win.offsetHeight;
+    const clamp = (lo, v, hi) => Math.max(lo, Math.min(hi, v));
+    // Ask for a generous offset past the browser's right and bottom edges and
+    // let the clamp take whatever the viewport actually allows — the screen
+    // edge is the real constraint, so requesting more simply means the widest
+    // sliver that still fits, rather than a fixed and often invisible one.
+    win.style.transform = "none";
+    win.style.left = clamp(EDGE, r.right - w + 170, window.innerWidth - w - EDGE) + "px";
+    win.style.top = clamp(topLimit() + EDGE, r.bottom - h + 130, window.innerHeight - h - EDGE) + "px";
+  }
+
+  const browserWin = document.querySelector(".browser");
+  if (!compact() && browserWin) {
+    const mapWin = openApp("map", { focus: false });
+    if (mapWin) tuckBehind(mapWin, browserWin);
+    raise(browserWin); // the browser is what the visitor should read first
+  }
 
   // The menu bar acts on whichever window is in front.
   window.__pinWindow = () => controllers.get(focused)?.pin();
