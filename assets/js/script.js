@@ -407,7 +407,7 @@ function particleColor(alpha) {
   let focused = wins[0];
 
   // macOS names the frontmost application in the menu bar; so does this.
-  const APP_NAMES = { "map-app": "Map" };
+  const APP_NAMES = { "map-app": "Map", "resume-app": "Preview" };
   const appNameEl = document.querySelector(".mb-app");
 
   function raise(win) {
@@ -695,17 +695,20 @@ function particleColor(alpha) {
   // it reads as a second running app and can be clicked to the front.
   // Not on phones: windows are full-screen there, so an auto-opened app would
   // simply hide the site behind it.
-  function tuckBehind(win, ref) {
+  // side: 1 tucks the window out past the browser's right edge, -1 past its
+  // left, so two background windows peek from opposite sides instead of
+  // stacking on each other.
+  function tuckBehind(win, ref, side) {
     controllers.get(win)?.pin();
     const r = ref.getBoundingClientRect();
     const w = win.offsetWidth, h = win.offsetHeight;
     const clamp = (lo, v, hi) => Math.max(lo, Math.min(hi, v));
-    // Ask for a generous offset past the browser's right and bottom edges and
-    // let the clamp take whatever the viewport actually allows — the screen
-    // edge is the real constraint, so requesting more simply means the widest
-    // sliver that still fits, rather than a fixed and often invisible one.
+    // Ask for a generous offset and let the clamp take whatever the viewport
+    // actually allows — the screen edge is the real constraint, so requesting
+    // more simply means the widest sliver that still fits.
+    const wantLeft = side > 0 ? r.right - w + 170 : r.left - 170;
     win.style.transform = "none";
-    win.style.left = clamp(EDGE, r.right - w + 170, window.innerWidth - w - EDGE) + "px";
+    win.style.left = clamp(EDGE, wantLeft, window.innerWidth - w - EDGE) + "px";
     win.style.top = clamp(topLimit() + EDGE, r.bottom - h + 130, window.innerHeight - h - EDGE) + "px";
   }
 
@@ -715,7 +718,9 @@ function particleColor(alpha) {
   const browserWin = document.querySelector(".browser");
   if (!compact() && browserWin) {
     const mapWin = openApp("map", { focus: false, animate: false });
-    if (mapWin) tuckBehind(mapWin, browserWin);
+    if (mapWin) tuckBehind(mapWin, browserWin, 1);
+    const cvWin = openApp("resume", { focus: false, animate: false });
+    if (cvWin) tuckBehind(cvWin, browserWin, -1);
     raise(browserWin); // the browser is what the visitor should read first
   }
 
@@ -830,22 +835,18 @@ function particleColor(alpha) {
   const lucky = document.getElementById("lucky-btn");
   const box = form;
 
-  const tabTargets = ["home", "about", "skills", "projects", "contact", "resume"];
-  // The map is no longer a tab — searching for it launches the app window, so
-  // every route to it has to go through __openApp rather than __activateTab.
-  const openMap = () => window.__openApp?.("map");
-
+  const tabTargets = ["home", "about", "skills", "projects", "map", "contact", "resume"];
   function go(query) {
     const q = (query || "").trim().toLowerCase();
     if (!q) return;
-    if (q === "map" || q === "maps" || q === "photo map") return openMap();
+    if (q === "map" || q === "maps" || q === "photo map") return window.__activateTab("map");
     // Direct tab name match
     if (tabTargets.includes(q)) return window.__activateTab(q);
     // Keyword aliases
     if (/(work|exp|me|bio)/.test(q)) return window.__activateTab("about");
     if (/(stack|tech|lang)/.test(q)) return window.__activateTab("skills");
     if (/(proj|build|portfolio|github)/.test(q)) return window.__activateTab("projects");
-    if (/(photo|pic|shot|place|travel|camera)/.test(q)) return openMap();
+    if (/(photo|pic|shot|place|travel|camera)/.test(q)) return window.__activateTab("map");
     if (/(mail|email|reach|find|social)/.test(q)) return window.__activateTab("contact");
     if (/(cv|resume|hire)/.test(q)) return window.__activateTab("resume");
     // Fallback: projects
@@ -865,10 +866,8 @@ function particleColor(alpha) {
     go(input.value);
   });
   lucky?.addEventListener("click", () => {
-    const pool = [...tabTargets.filter((t) => t !== "home"), "map"];
-    const pick = pool[Math.floor(Math.random() * pool.length)];
-    if (pick === "map") return openMap();
-    window.__activateTab(pick);
+    const pool = tabTargets.filter((t) => t !== "home");
+    window.__activateTab(pool[Math.floor(Math.random() * pool.length)]);
   });
 })();
 
@@ -1016,6 +1015,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
     ],
     window: [
       { label: "Open Map", run: () => window.__openApp?.("map") },
+      { label: "Open Resume PDF", run: () => window.__openApp?.("resume") },
       { label: "Zoom", run: () => window.__toggleZoom?.() },
       { label: "Center Window", run: () => window.__centerWindow?.() },
     ],

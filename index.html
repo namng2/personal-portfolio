@@ -45,7 +45,7 @@
         integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="assets/css/themes.css?v=4" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=35" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=36" />
   <!-- Render-blocking on purpose: stamps the saved theme onto <html> before
        first paint, so the page never flashes the default palette first. It
        has to be a file, not inline, because the CSP above forbids inline
@@ -154,6 +154,10 @@
                 aria-selected="false" aria-controls="panel-projects" tabindex="-1">
           <span class="tab-icon">🚀</span><span class="tab-label">Projects</span>
         </button>
+        <button class="tab" id="tab-map" role="tab" data-tab="map"
+                aria-selected="false" aria-controls="panel-map" tabindex="-1">
+          <span class="tab-icon">🗺️</span><span class="tab-label">Map</span>
+        </button>
         <button class="tab" id="tab-contact" role="tab" data-tab="contact"
                 aria-selected="false" aria-controls="panel-contact" tabindex="-1">
           <span class="tab-icon">📬</span><span class="tab-label">Contact</span>
@@ -236,7 +240,7 @@
               <span class="shortcut-icon">🚀</span>
               <span class="shortcut-label">Projects</span>
             </button>
-            <button class="shortcut" data-app="map">
+            <button class="shortcut" data-goto="map">
               <span class="shortcut-icon">🗺️</span>
               <span class="shortcut-label">Photo Map</span>
             </button>
@@ -368,6 +372,25 @@
         </div>
       </section>
 
+      <!-- PHOTO MAP — the section. The map itself lives in its own
+           application window; this introduces it and launches it. -->
+      <section class="panel" id="panel-map" role="tabpanel"
+               aria-labelledby="tab-map" data-panel="map" tabindex="0" hidden>
+        <h2>Photo Map</h2>
+        <p class="lede">Places I have pointed a camera at. Pick a thumbnail to see the shot.</p>
+        <p>
+          Every photograph here is one of mine, pinned where it was taken. The
+          map opens as its own application on the desktop, so you can move it,
+          resize it, and zoom around while reading anything else in this window.
+          Camera and location metadata is stripped from every file before it is
+          published — only the picture ships.
+        </p>
+        <nav class="links">
+          <button type="button" class="btn" data-app="map">Open the Map</button>
+          <span class="pm-count-inline" data-pm-count></span>
+        </nav>
+      </section>
+
       <!-- CONTACT -->
       <section class="panel" id="panel-contact" role="tabpanel"
                aria-labelledby="tab-contact" data-panel="contact" tabindex="0" hidden>
@@ -422,7 +445,7 @@
 
     <div class="app-body">
       <div id="photo-map" class="pm-map" role="region" aria-label="Map of photo locations"></div>
-      <span class="app-count" id="pm-count"></span>
+      <span class="app-count" id="pm-count" data-pm-count></span>
       <p id="pm-empty" class="pm-empty" hidden>
             No photographs published yet — check back as the map grows.
           </p>
@@ -470,6 +493,36 @@
   </section>
 
   <!-- ======================================================================
+       Resume — a Preview-style window showing the committed PDF itself, not a
+       re-render of it. An <iframe> and not <embed>: the CSP sets
+       object-src 'none', which kills <embed>/<object>, while frame-src falls
+       back to child-src 'self'.
+       ====================================================================== -->
+  <section class="window app-window framed" id="resume-app" aria-label="Resume" hidden>
+    <header class="app-chrome">
+      <div class="window-controls">
+        <button type="button" class="dot dot-close" data-app-close aria-label="Close Resume" title="Close"></button>
+        <button type="button" class="dot dot-min" data-app-min aria-label="Minimise Resume" title="Minimise"></button>
+        <button type="button" class="dot dot-max" data-app-zoom aria-label="Zoom Resume" title="Zoom"></button>
+      </div>
+      <span class="app-title">resume.pdf <small>1 page</small></span>
+      <a class="app-action" href="assets/resume/resume.pdf" target="_blank" rel="noopener">Open in new tab</a>
+    </header>
+    <div class="app-body">
+      <!-- The chrome inside this frame belongs to the browser's own PDF
+           viewer and cannot be styled from here. Chromium ignores toolbar=0
+           and navpanes=0 (they are Acrobat's parameters); Safari and Firefox
+           honour some, so they are worth sending. -->
+      <iframe class="pdf-frame" src="assets/resume/resume.pdf#toolbar=0&amp;navpanes=0&amp;view=FitH"
+              title="Nam Nguyen — resume (PDF)" loading="lazy"></iframe>
+    </div>
+    <div class="resize-handle" data-corner="nw" aria-hidden="true"></div>
+    <div class="resize-handle" data-corner="ne" aria-hidden="true"></div>
+    <div class="resize-handle" data-corner="sw" aria-hidden="true"></div>
+    <div class="resize-handle" data-corner="se" aria-hidden="true"></div>
+  </section>
+
+  <!-- ======================================================================
        Dock — the taskbar. Minimising a window sends it here; clicking its
        icon brings it back. The lit dot under an icon means that window is
        on screen, so the dock doubles as the desktop's window list.
@@ -483,6 +536,11 @@
     <button type="button" class="dock-item" data-dock="map" aria-label="Map">
       <span class="dock-icon" aria-hidden="true">🗺️</span>
       <span class="dock-tip" aria-hidden="true">Map</span>
+      <span class="dock-dot" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="dock-item" data-dock="resume" aria-label="Resume">
+      <span class="dock-icon" aria-hidden="true">📄</span>
+      <span class="dock-tip" aria-hidden="true">Resume</span>
       <span class="dock-dot" aria-hidden="true"></span>
     </button>
   </nav>
@@ -515,8 +573,8 @@
           integrity="sha512-hoXlvOdSmh58mppUyZHZsscHkR/yXl6zLpTMTNwA6IZ61DpeaCNjosRu1WJ2DeIpkfW5MsJJ9H89zjV4IBGqRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="assets/js/theme.js?v=5"></script>
-  <script src="assets/js/photo-map.js?v=25"></script>
-  <script src="assets/js/script.js?v=18"></script>
+  <script src="assets/js/photo-map.js?v=26"></script>
+  <script src="assets/js/script.js?v=19"></script>
   <script src="assets/js/resume.js?v=7"></script>
 
 </body>

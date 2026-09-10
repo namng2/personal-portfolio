@@ -79,6 +79,20 @@ Gotchas found the hard way:
 
 ## Windows
 
+The desktop runs three: the browser, the Map, and Resume — a Preview-style
+window showing `assets/resume/resume.pdf` in an `<iframe>`. It has to be an
+iframe: the CSP sets `object-src 'none'`, which kills `<embed>` and `<object>`,
+while `frame-src` falls back to `child-src 'self'`. The chrome *inside* that
+frame is the browser's own PDF viewer and cannot be styled from here — Chromium
+ignores `toolbar=0` and `navpanes=0`, so the window is sized wide enough to
+live with its sidebar.
+
+The Map is both an app and a browser section: the tab introduces it and
+launches it, the window holds the actual map. Browser navigation (the tab bar,
+the Home shortcut, the search box) goes to the section; the dock and the Window
+menu open the application. The photo count appears in both, so it is written to
+every `[data-pm-count]` rather than to one id.
+
 The desktop runs more than one window. Anything with `class="window"` is picked
 up by the window manager in `script.js`, which gives it dragging by its chrome,
 resizing from all four corners, zoom, centring, and a place in the stacking
@@ -100,11 +114,12 @@ twice, so check them before debugging anything else:
   `#map-app`, and later the dock, after the `<script>` tags left `photo-map.js`
   bailing at its null guard and `querySelectorAll("[data-dock]")` returning an
   empty list. No console error either time — just a dead feature.
-- **A mobile override must sit after the rule it overrides.** Equal specificity
-  means source order decides, so an `@media (max-width: 640px)` block placed
-  earlier in the file silently loses to the desktop rule. It hit `.app-window`
-  and then `.dock`. Watch specificity too: `.dot-min` loses to
-  `.window-controls .dot`.
+- **A mobile override must out-rank *and* out-order the rule it overrides.**
+  Equal specificity means source order decides, so an `@media (max-width: 640px)`
+  block placed earlier in the file silently loses — it hit `.app-window`, then
+  `.dock`. Specificity bites too: `.dot-min` loses to `.window-controls .dot`,
+  and `.app-window` loses to `#resume-app`, which sets its own width as an id
+  and so has to be named in the media query by hand.
 - **`display` on a window outranks `[hidden]`.** Both `.browser` and
   `.app-window` set `display: flex`, which beats the user-agent rule for
   `[hidden]`, so each needs its own `[hidden] { display: none }` or hiding it

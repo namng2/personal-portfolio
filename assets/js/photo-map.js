@@ -201,12 +201,15 @@
 
     const empty = document.getElementById("pm-empty");
     if (empty) empty.hidden = photos.length > 0;
-    const count = document.getElementById("pm-count");
-    if (count) {
-      count.textContent = photos.length
-        ? `${photos.length} photo${photos.length === 1 ? "" : "s"}`
-        : "";
-    }
+    // The count appears in the Map window's chrome and again in the Map
+    // section inside the browser, so it is addressed by attribute rather than
+    // by a single id.
+    const label = photos.length
+      ? `${photos.length} photo${photos.length === 1 ? "" : "s"}`
+      : "";
+    document.querySelectorAll("[data-pm-count]").forEach((el) => {
+      el.textContent = label;
+    });
 
     if (pts.length === 1) {
       map.jumpTo({ center: pts[0], zoom: 13 });
