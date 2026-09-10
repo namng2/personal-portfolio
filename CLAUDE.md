@@ -167,8 +167,13 @@ on `map.on("load")` — a slow or broken basemap would then cost the photographs
 too, which are the point of the tab. MapLibre gives markers no intrinsic size,
 so `.pm-pin-wrap` sets its own 64×72 and the marker uses `anchor: "bottom"`.
 
-Publishing a photo is: file into `assets/photos/`, entry into
-`assets/data/photos.json`, push. A manifest `file` may also be a full
+Publishing a photo is: file into `assets/photos/`, run
+`./assets/photos/build-thumbs.sh`, entry into `assets/data/photos.json`, push.
+
+**Pins and popups load `assets/photos/thumbs/`, not the originals.** They render
+at 64px and ~320px, so serving the 2200px file meant ~9 MB to draw a handful of
+thumbnails; the full-size viewer still fetches the original on demand. Forget
+the build script and the new photo's pin is a broken image. A manifest `file` may also be a full
 `https://` URL if the photo is hosted elsewhere — add that host to `img-src`
 in the CSP when you do.
 

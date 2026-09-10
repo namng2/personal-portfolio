@@ -7,8 +7,11 @@
   --dock-h: 68px;
 
   /* Desktop wallpaper. Swap the file in assets/img/ or set this to none.
-     The dimming tint is a colour, so it lives in themes.css. */
-  --wallpaper: url("../img/wallpaper.jpg");
+     The dimming tint is a colour, so it lives in themes.css.
+     The ?v= is a cache-buster and matters: the file was re-encoded from
+     2074 KB to 624 KB, and without a changed URL every returning visitor
+     keeps the old one indefinitely. Bump it whenever the image changes. */
+  --wallpaper: url("../img/wallpaper.jpg?v=2");
 }
 
 html { background: var(--bg); }
@@ -764,6 +767,12 @@ main.viewport > .panel:not([data-panel="home"]) {
 
 /* Responsive trim */
 @media (max-width: 640px) {
+  /* The window fills a phone screen, so the wallpaper is never seen — only a
+     sliver behind the menu bar. Resolving --wallpaper to none means the file
+     is not requested at all, which is 624 KB the visitor never pays for.
+     body keeps its background-color, so nothing goes transparent. */
+  :root { --wallpaper: none; }
+
   .browser {
     top: var(--menubar-h);
     left: 0;
@@ -1651,15 +1660,15 @@ footer {
   bottom: -2px;
   left: 50%;
   transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--muted);
   opacity: 0;
   transition: opacity 0.15s ease;
 }
 .dock-item.is-open .dock-dot { opacity: 0.85; }
-.dock-item.is-focused .dock-dot { background: var(--accent-1); opacity: 1; }
+.dock-item.is-focused .dock-dot { background: #00b309; opacity: 1; }
 .dock-tip {
   position: absolute;
   bottom: calc(100% + 10px);

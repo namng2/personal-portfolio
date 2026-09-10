@@ -13,14 +13,22 @@ silently changed:
 
 ## 2. Smaller polish
 
-- **Photo dates**: the 11 map photos have no `date` field. EXIF was stripped
+- **Photo dates**: the 13 map photos have no `date` field. EXIF was stripped
   before publishing, so capture dates would have to come from you.
+- **No `og:image`.** Every other Open Graph tag is set, so a shared link renders
+  as a bare grey rectangle on LinkedIn, Slack and iMessage. Needs one 1200x630
+  image plus `twitter:card` changed to `summary_large_image`.
+- **The reveal system is inert.** `script.js` observes `[data-reveal]` and
+  `styles.css` styles it, but no element in the markup carries the attribute —
+  it has been absent for at least a dozen commits. Either wire it up or delete
+  both halves.
+- **Projects 02 and 03 have no measured outcome**, and the air-hockey repo has
+  no README — the strongest claim on the site lands on a bare file listing.
 - **Dead CSS** in `styles.css`: `.r-project`, `.r-project-head`,
   `.r-project-name`, `.r-project-link`, `.r-tagline` are styled but never
   emitted by `resume.js`.
 - **Window geometry resets on reload** — could persist size/position to
   `localStorage` the way the theme already does.
-- **Only the bottom-right corner resizes.** Real windows resize from any edge.
 - **`RING_EASE`** in `script.js` eases per frame, so the cursor ring converges
   about twice as fast on a 120 Hz display as on 60 Hz. Normalise to elapsed time
   if it looks inconsistent across monitors.

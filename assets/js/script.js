@@ -312,6 +312,22 @@ function particleColor(alpha) {
       p.hidden = !on;
     });
     if (urlDisplay) urlDisplay.textContent = "portfolio://" + name;
+
+    // Keep the real address in step so a section can be linked, bookmarked or
+    // shared. replaceState rather than pushState: the window chrome's own
+    // back/forward run on an internal stack, and pushing here would interleave
+    // two histories that disagree.
+    if (!options.fromHash) {
+      try {
+        history.replaceState(
+          null,
+          "",
+          name === "home" ? location.pathname + location.search : "#" + name
+        );
+      } catch (_) {
+        /* file:// and some embedded contexts refuse replaceState */
+      }
+    }
     document.querySelector(".viewport")?.scrollTo({ top: 0, behavior: "auto" });
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
 
@@ -367,6 +383,18 @@ function particleColor(alpha) {
   });
 
   // Expose for other modules
+  // A URL that names a section opens it. Suppress the resume modal here: a
+  // deep link should land on the section, not throw a full-screen overlay at
+  // someone who has just arrived.
+  function activateFromHash() {
+    const name = decodeURIComponent(location.hash.replace(/^#/, "")).trim();
+    if (!name) return;
+    if (!Array.from(tabs).some((t) => t.dataset.tab === name)) return;
+    activate(name, { fromHash: true, openResume: false });
+  }
+  window.addEventListener("hashchange", activateFromHash);
+  activateFromHash();
+
   window.__activateTab = activate;
 })();
 
@@ -563,6 +591,11 @@ function particleColor(alpha) {
   function openApp(id, { focus = true, animate = true } = {}) {
     const win = document.getElementById(id + "-app");
     if (!win) return;
+    // Only a window actually coming back from the dock should fly. Launching
+    // one that is already on screen — "Open the Map" while the Map is open, or
+    // Window > Open Map — should just bring it forward, not collapse it to
+    // dock size and expand it again.
+    const wasHidden = win.hidden;
     win.hidden = false;
     // Only the very first open is centred. Keying this off `hidden` would
     // re-centre on every reopen, throwing away wherever the window had been
@@ -572,7 +605,7 @@ function particleColor(alpha) {
       controllers.get(win)?.centre();
     }
     raise(win);
-    if (animate) flight(win, "in");
+    if (animate && wasHidden) flight(win, "in");
     if (focus) win.querySelector("[data-app-close]")?.focus();
     return win;
   }

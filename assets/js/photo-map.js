@@ -177,6 +177,18 @@
     return PHOTO_DIR + f.replace(/^\/+/, "");
   }
 
+  // Pins render at 64px and popups at ~320px, so serving them the 2200px
+  // original meant ~9 MB to draw a handful of thumbnails. build-thumbs.sh
+  // writes a 480px copy of every local photo alongside it; the full-size
+  // viewer still loads the original on demand. A photo hosted elsewhere has no
+  // thumbnail, so it falls back to its own URL.
+  const THUMB_DIR = PHOTO_DIR + "thumbs/";
+  function thumbSrc(p) {
+    const f = String(p.file || "").trim();
+    if (!f || /^https?:\/\//i.test(f)) return photoSrc(p);
+    return THUMB_DIR + f.replace(/^\/+/, "");
+  }
+
   const valid = (p) => p && photoSrc(p) && isFinite(p.lat) && isFinite(p.lng);
 
   function render() {
@@ -233,7 +245,7 @@
     el.title = p.title || p.file || "";
     el.innerHTML =
       '<span class="pm-pin">' +
-      `<img src="${escAttr(photoSrc(p))}" alt="${escAttr(p.title || "")}" loading="lazy">` +
+      `<img src="${escAttr(thumbSrc(p))}" alt="${escAttr(p.title || "")}" loading="lazy">` +
       "</span>";
     return el;
   }
@@ -247,7 +259,7 @@
     return (
       `<button type="button" class="pm-pop-open" data-index="${i}" ` +
       `aria-label="View ${escAttr(p.title || "photo")} full size">` +
-      `<img class="pm-pop-img" src="${escAttr(photoSrc(p))}" alt="${escAttr(p.title || "")}">` +
+      `<img class="pm-pop-img" src="${escAttr(thumbSrc(p))}" alt="${escAttr(p.title || "")}">` +
       `<span class="pm-pop-zoom" aria-hidden="true">View full size</span></button>` +
       bits.join("")
     );
