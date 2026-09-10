@@ -173,7 +173,15 @@ Publishing a photo is: file into `assets/photos/`, run
 **Pins and popups load `assets/photos/thumbs/`, not the originals.** They render
 at 64px and ~320px, so serving the 2200px file meant ~9 MB to draw a handful of
 thumbnails; the full-size viewer still fetches the original on demand. Forget
-the build script and the new photo's pin is a broken image. A manifest `file` may also be a full
+the build script and the new photo's pin is a broken image.
+
+**Originals must be upright in their pixels before they go in.** Rotate by the
+EXIF orientation, resize, then strip metadata *last* (sips re-adds its own on
+resize). Read the orientation from the EXIF bytes themselves, not from
+`sips -g orientation`: it reported nothing for a camera file tagged
+orientation 8, and an image viewer honours the tag, so the preview looked
+right. Stripping would then have removed the tag and published a portrait
+photo sideways. This is how 7 of the first 11 nearly shipped. A manifest `file` may also be a full
 `https://` URL if the photo is hosted elsewhere — add that host to `img-src`
 in the CSP when you do.
 

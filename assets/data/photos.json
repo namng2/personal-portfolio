@@ -11,5 +11,9 @@
   { "file": "skyline-pullout.jpg",      "lat": 37.230584, "lng": -122.095150, "title": "", "place": "Santa Cruz Mountains" },
   { "file": "river-rafting.jpg",        "lat": 37.807281, "lng": -120.717180, "title": "Slowly", "place": "Stanislaus River" },
   { "file": "hillside-victorians.jpg",  "lat": 37.757127, "lng": -122.431297, "title": "Downhill", "place": "Dolores Heights, San Francisco" },
-  { "file": "dolores-park-skyline.jpg", "lat": 37.758339, "lng": -122.425982, "title": "Afternoon", "place": "Mission Dolores Park, San Francisco" }
+  { "file": "dolores-park-skyline.jpg", "lat": 37.758339, "lng": -122.425982, "title": "Afternoon", "place": "Mission Dolores Park, San Francisco" },
+  { "file": "battery-spencer-bridge.jpg", "lat": 37.827895, "lng": -122.481987, "title": "Pulled over", "place": "Battery Spencer, Marin Headlands" },
+  { "file": "grizzly-peak-overlook.jpg", "lat": 37.884218, "lng": -122.239268, "title": "Clear day", "place": "Grizzly Peak, Berkeley Hills" },
+  { "file": "san-pablo-shelter.jpg",    "lat": 37.917667, "lng": -122.234583, "title": "Shade", "place": "San Pablo Reservoir" },
+  { "file": "san-pablo-pontoons.jpg",   "lat": 37.934529, "lng": -122.253860, "title": "Moored", "place": "San Pablo Reservoir" }
 ]
