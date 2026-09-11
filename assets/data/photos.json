@@ -15,5 +15,6 @@
   { "file": "battery-spencer-bridge.jpg", "lat": 37.827895, "lng": -122.481987, "title": "Pulled over", "place": "Battery Spencer, Marin Headlands" },
   { "file": "grizzly-peak-overlook.jpg", "lat": 37.884218, "lng": -122.239268, "title": "Clear day", "place": "Grizzly Peak, Berkeley Hills" },
   { "file": "san-pablo-shelter.jpg",    "lat": 37.917667, "lng": -122.234583, "title": "Shade", "place": "San Pablo Reservoir" },
-  { "file": "san-pablo-pontoons.jpg",   "lat": 37.934529, "lng": -122.253860, "title": "Moored", "place": "San Pablo Reservoir" }
+  { "file": "san-pablo-pontoons.jpg",   "lat": 37.934529, "lng": -122.253860, "title": "Moored", "place": "San Pablo Reservoir" },
+  { "file": "marin-headlands-cliffs.jpg", "lat": 37.820375, "lng": -122.500138, "title": "Westward", "place": "Marin Headlands" }
 ]
