@@ -13,6 +13,10 @@ silently changed:
 
 ## 2. Smaller polish
 
+- **Four photographs have no title** — `west-portal-night`,
+  `lands-end-cypress`, `santa-cruz-ridgeline`, `skyline-pullout`. The phone's
+  photo sheet shows their place instead of a placeholder, but a title reads
+  better, and the map popup has nothing to show without one.
 - **Photo dates**: the 13 map photos have no `date` field. EXIF was stripped
   before publishing, so capture dates would have to come from you.
 - **No `og:image`.** Every other Open Graph tag is set, so a shared link renders
@@ -36,6 +40,22 @@ silently changed:
   Change it in the repository's About settings to the GitHub Pages URL.
 - **Clickjacking** isn't defended: `frame-ancestors` only works as an HTTP
   header and GitHub Pages can't set one. Low risk; noted for completeness.
+
+## 3. The phone build, next steps
+
+- **A Photos app.** The home screen has room for one, and the manifest, the
+  thumbnails and the full-size viewer already exist — it is a grid of
+  `photos.json` that opens `openBox()`. The obvious next addition.
+- **The wallpaper widget could fly the map to its own pin.** It opens the Map
+  fitted to every photograph instead; photo-map.js would need to expose a
+  "focus this file" call.
+- **MapLibre still loads on every phone visit** (~250 KB gzipped) even though
+  the Map may never be opened. Loading it on first reveal would need the SRI
+  hash moved into JS.
+- **The wallpaper is fixed to one photograph.** Rotating it daily is a few
+  lines, but each extra crop is another ~140 KB in the repo.
+- **`og:image` is still missing**, and a shared link still renders as a grey
+  rectangle. Unchanged by the phone build.
 
 ## Done
 

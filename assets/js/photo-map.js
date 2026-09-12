@@ -81,6 +81,7 @@
   let map = null;
   let markers = [];
   let photos = [];
+  let loaded = false;
 
   const currentMode = () =>
     window.__getResolvedTheme?.() === "light" ? "light" : "dark";
@@ -141,8 +142,11 @@
     // which is never initialised on the deployed site.
     if (IS_LOCAL) map.on("click", onMapClick);
     // Deliberately not inside map.on("load"): the photographs are the content,
-    // and they must not wait on — or be lost with — the basemap.
-    load();
+    // and they must not wait on — or be lost with — the basemap. The manifest
+    // is usually in hand already, fetched at startup, and this is then only a
+    // re-render to hang the markers on the map that has just been built.
+    if (loaded) render();
+    else load();
   }
 
   // Each theme gets its own cartography. Markers are DOM overlays, so they
@@ -162,6 +166,7 @@
     } catch {
       photos = [];
     }
+    loaded = true;
     render();
   }
 
@@ -197,6 +202,11 @@
     const pts = [];
 
     photos.forEach((p) => {
+      pts.push([p.lng, p.lat]);
+      // The manifest is fetched at startup so the photo count and the phone's
+      // photo sheet exist before the Map window has ever been opened. Only the
+      // markers need a live map.
+      if (!map) return;
       const popup = new maplibregl.Popup({
         className: "pm-popup",
         maxWidth: "320px",
@@ -208,11 +218,11 @@
           .setPopup(popup)
           .addTo(map)
       );
-      pts.push([p.lng, p.lat]);
     });
 
     const empty = document.getElementById("pm-empty");
     if (empty) empty.hidden = photos.length > 0;
+    buildSheet();
     // The count appears in the Map window's chrome and again in the Map
     // section inside the browser, so it is addressed by attribute rather than
     // by a single id.
@@ -222,6 +232,8 @@
     document.querySelectorAll("[data-pm-count]").forEach((el) => {
       el.textContent = label;
     });
+
+    if (!map) return;
 
     if (pts.length === 1) {
       map.jumpTo({ center: pts[0], zoom: 13 });
@@ -233,6 +245,94 @@
       map.fitBounds(b, { padding: 60, maxZoom: 14, animate: false });
     }
     syncZoom();
+  }
+
+  // ---- the phone photo sheet ----------------------------------------------
+  // Apple Maps lists its places in a sheet over the map rather than in a
+  // popup, and for good reason: a 320px popup is most of a phone screen. The
+  // sheet is built at every screen size and shown by mobile.css only on a
+  // phone, so turning a phone sideways has nothing to create or tear down.
+  //
+  // Peek height is 13.5rem in mobile.css; PEEK repeats it because the drag has
+  // to know where the closed position is. Keep the two in step.
+  const PEEK = 216;
+
+  function buildSheet() {
+    if (!win) return;
+    let sheet = win.querySelector(".pm-sheet");
+    if (!sheet) {
+      sheet = document.createElement("div");
+      sheet.className = "pm-sheet";
+      sheet.innerHTML =
+        '<button type="button" class="pm-sheet-grab" aria-expanded="false" ' +
+        'aria-label="Expand the photo list"></button>' +
+        '<h2 class="pm-sheet-head" data-pm-count></h2>' +
+        '<div class="pm-sheet-list"></div>';
+      win.appendChild(sheet);
+      sheetGestures(sheet);
+    }
+
+    const list = sheet.querySelector(".pm-sheet-list");
+    list.innerHTML = "";
+    photos.forEach((p, i) => {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "pm-sheet-row";
+      // Four photographs carry no title. "Photo" labels a row with nothing,
+      // so the place — which is a real name — moves up into the heading and
+      // the second line goes away rather than repeating it.
+      const heading = p.title || p.place || "Photo";
+      const sub = p.title ? p.place : "";
+      row.innerHTML =
+        `<img src="${escAttr(thumbSrc(p))}" alt="" loading="lazy">` +
+        "<span>" +
+        `<span class="pm-sheet-title">${esc(heading)}</span>` +
+        (sub ? `<span class="pm-sheet-place">${esc(sub)}</span>` : "") +
+        "</span>";
+      row.addEventListener("click", () => openBox(i));
+      list.appendChild(row);
+    });
+  }
+
+  function sheetGestures(sheet) {
+    const grab = sheet.querySelector(".pm-sheet-grab");
+    let startY = 0, startUp = false, dy = 0, dragging = false;
+
+    const setUp = (up) => {
+      sheet.classList.toggle("is-up", up);
+      grab.setAttribute("aria-expanded", up ? "true" : "false");
+    };
+
+    grab.addEventListener("click", () => setUp(!sheet.classList.contains("is-up")));
+
+    grab.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      dy = 0;
+      startY = e.clientY;
+      startUp = sheet.classList.contains("is-up");
+      sheet.classList.add("is-dragging");
+      grab.setPointerCapture(e.pointerId);
+    });
+
+    grab.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      dy = e.clientY - startY;
+      const closed = Math.max(0, sheet.offsetHeight - PEEK);
+      const y = Math.max(0, Math.min(closed, (startUp ? 0 : closed) + dy));
+      sheet.style.setProperty("--sheet-y", y + "px");
+    });
+
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      sheet.classList.remove("is-dragging");
+      // Hand the position back to the stylesheet before snapping, or the
+      // inline value pins the sheet wherever the finger left it.
+      sheet.style.removeProperty("--sheet-y");
+      if (Math.abs(dy) > 40) setUp(dy < 0);
+    };
+    grab.addEventListener("pointerup", end);
+    grab.addEventListener("pointercancel", end);
   }
 
   // Thumbnail pin, in the style of the Photos-on-a-map pin: rounded image with
@@ -331,7 +431,18 @@
     if (!p) return;
     boxIndex = i;
     box.classList.remove("is-zoomed");
-    boxImg.src = photoSrc(p);
+    // The thumbnail first — it is already in cache, from the pin or the phone's
+    // photo sheet — then the full-size file when it arrives. A 900 KB
+    // photograph over a phone connection is otherwise a blank frame for
+    // several seconds; this makes it an instant, soft preview that sharpens.
+    boxImg.src = thumbSrc(p);
+    const full = new Image();
+    full.onload = () => {
+      // Only if this is still the photograph on screen: someone stepping
+      // through them quickly would otherwise get an earlier image back.
+      if (boxIndex === i) boxImg.src = full.src;
+    };
+    full.src = photoSrc(p);
     boxImg.alt = p.title || "";
     const meta = [p.place, formatDate(p.date)].filter(Boolean).join(" · ");
     boxCap.textContent = [p.title, meta].filter(Boolean).join(" — ");
@@ -605,4 +716,12 @@
 
     return result.lat == null && !result.date ? null : result;
   }
+
+  // ---- startup -------------------------------------------------------------
+  // The manifest is fetched now rather than when the Map window first opens.
+  // The photo count is shown in three places that are visible long before the
+  // map is — the Map section, the window's own pill, and the phone home
+  // screen's widget — and the phone's photo sheet is built from the same data.
+  // render() hangs markers only if there is a map to hang them on.
+  load();
 })();

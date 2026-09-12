@@ -141,6 +141,71 @@ twice, so check them before debugging anything else:
   it. ResizeObserver covers the live drag in a real browser but never fires in
   the agent's pane, so it cannot be the only mechanism.
 
+## The phone build
+
+**A handset gets an iPhone, not a shrunken Mac.** `#springboard` is a home
+screen — wallpaper, two widgets, an icon grid and a dock — and each section
+opens full-screen as an "app" with a title bar and a home indicator.
+
+```
+assets/css/mobile.css       every phone rule, nothing else
+assets/js/springboard.js    the home screen: open/close, history, animation
+assets/img/wallpaper-phone.jpg  one of the map's own photographs
+site.webmanifest + assets/img/apple-touch-icon.png   Add to Home Screen
+```
+
+**The switch is a class, not a media query.** `boot-theme.js` stamps
+`.is-phone` on `<html>` before first paint from `window.__PHONE_MQ`:
+
+```
+(max-width: 640px), (max-height: 500px) and (pointer: coarse)
+```
+
+CSS keys off the class, `springboard.js` keeps it in step with `matchMedia`,
+and `script.js`'s `compact()` reads it too. The second clause is a phone held
+sideways — 844x390 is wider than any width breakpoint and still a phone.
+
+**mobile.css loads after styles.css**, so a rule in it always wins on source
+order. That is the structural fix for the trap that has broken the phone
+layout three times; put phone rules there and nowhere else.
+
+Things that matter when editing it:
+
+- **No content is duplicated.** An icon calls `__activateTab()` and shows the
+  browser window full-screen; the Map icon shows `#map-app`. Both builds read
+  the same panels, so a section is written once.
+- **The phone never calls `__openApp`.** springboard.js sets `hidden` and
+  `.ph-open` itself, which keeps stacking deterministic (`raise()` already
+  skips z-index when `compact()`), and still trips photo-map.js's observer on
+  `#map-app[hidden]`.
+- **The title bar and home indicator are injected by springboard.js**, because
+  they are phone-only behaviour — markup and the code driving it stay one unit.
+- **Back closes the app.** Opening pushes a history entry, the home control
+  walks it back, and `popstate` closes. Without that, a back swipe leaves the
+  site.
+- **`--menubar-h` is zeroed** rather than the rules being rewritten, so every
+  `calc(100vh - var(--menubar-h))` in styles.css resolves to full screen.
+- **Heights are `100dvh`.** On iPhone Safari `100vh` is measured with the
+  toolbars retracted, and these windows never scroll the page, so the last
+  80-odd pixels would sit behind the toolbar.
+- **Never draw a fake status bar.** The iPhone's real clock and battery are
+  directly above; two of them read as a bug. The fake menu bar is hidden, and
+  Appearance moved to a home-screen icon so the palettes stay reachable.
+- **The Resume icon opens the PDF itself**, handed to iOS's own viewer. An
+  iframe is unreliable there. That frame now carries `data-src`, and the window
+  manager sets `src` on first open, so a phone never downloads 126 KB it will
+  not display.
+- **The photo sheet is built at every screen size** and shown by mobile.css
+  only on a phone, so a rotation has nothing to create or tear down. `PEEK` in
+  photo-map.js repeats the sheet's closed offset from mobile.css — keep the
+  two in step.
+
+**Verifying it here has one blind spot**: the agent's browser pane only
+emulates touch below 768px, so the landscape clause cannot match at 844x390 in
+the pane. Test it at 740x390, or on a real handset:
+`python3 -m http.server 5500` already listens on every interface, so the phone
+opens `http://<the Mac's LAN IP>:5500` over the same Wi-Fi.
+
 ## The photo map
 
 **The map is its own application window, not a browser tab.** It is launched
@@ -174,6 +239,9 @@ Publishing a photo is: file into `assets/photos/`, run
 at 64px and ~320px, so serving the 2200px file meant ~9 MB to draw a handful of
 thumbnails; the full-size viewer still fetches the original on demand. Forget
 the build script and the new photo's pin is a broken image.
+The viewer opens on the cached thumbnail and swaps in the original when it
+arrives: a 900 KB photograph over a phone connection is otherwise a blank
+frame for several seconds.
 
 **Originals must be upright in their pixels before they go in.** Rotate by the
 EXIF orientation, resize, then strip metadata *last* (sips re-adds its own on

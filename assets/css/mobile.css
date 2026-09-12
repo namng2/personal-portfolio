@@ -1,0 +1,651 @@
+/* ==========================================================================
+   mobile.css — the phone build. On a handset the desktop metaphor changes:
+   the Mac becomes an iPhone. A home screen of apps replaces the wallpaper,
+   the menu bar and the browser chrome; each section opens full-screen.
+
+   Everything here hangs off `html.is-phone`, stamped by boot-theme.js before
+   first paint and kept in step by springboard.js. Two reasons for the class
+   rather than a bare media query:
+
+   1. JS has to agree with CSS about what a phone is, and a class is the only
+      thing both can read.
+   2. This file loads *after* styles.css, so an override here always wins on
+      source order — the trap that has broken the phone layout three times
+      (.app-window, .dock, #resume-app) cannot happen from this file.
+
+   Colour still comes from themes.css tokens. The one exception is the scrim
+   over the wallpaper photograph: that is legibility over an image, not a
+   palette decision, so it must not change with the theme.
+   ========================================================================== */
+
+/* The fake menu bar goes. The real iPhone status bar is directly above it,
+   and two clocks stacked on top of each other read as a bug. Zeroing the
+   token rather than deleting the rules means every existing
+   `calc(100vh - var(--menubar-h))` in styles.css resolves to full screen. */
+html.is-phone {
+  --menubar-h: 0px;
+}
+
+html.is-phone .menubar,
+html.is-phone .dock,
+html.is-phone #bg,
+html.is-phone #cursor,
+html.is-phone #cursor-ring,
+html.is-phone .resize-handle,
+html.is-phone .browser-chrome,
+html.is-phone .address-bar,
+html.is-phone .window-controls {
+  display: none;
+}
+
+/* No desktop wallpaper on the body: the home screen paints its own. */
+html.is-phone body {
+  background-image: none;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* ==========================================================================
+   The home screen
+   ========================================================================== */
+#springboard {
+  display: none;
+}
+
+html.is-phone #springboard {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background-color: var(--bg);
+  background-image: url("../img/wallpaper-phone.jpg?v=1");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* A scrim, so white labels hold up over a photograph whatever it contains.
+   Deliberately a literal: this is contrast over an image, and it has to stay
+   put when the palette or the light/dark mode changes. */
+html.is-phone #springboard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.34) 0%,
+    rgba(0, 0, 0, 0.16) 38%,
+    rgba(0, 0, 0, 0.52) 100%
+  );
+}
+
+.sb-screen {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: calc(env(safe-area-inset-top) + 1.15rem)
+           calc(env(safe-area-inset-right) + 1.15rem)
+           calc(env(safe-area-inset-bottom) + 0.7rem)
+           calc(env(safe-area-inset-left) + 1.15rem);
+  overflow-y: auto;
+  color: #fff;
+  /* A home screen does not select its own labels, and iOS's grey tap flash
+     on every icon reads as a web page rather than an app. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- widgets ------------------------------------------------------------- */
+.sb-widgets {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 0.85rem;
+}
+
+.sb-widget {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+  min-height: 9.5rem;
+  padding: 0.95rem 1rem;
+  border: 0.5px solid var(--rule);
+  border-radius: 20px;
+  /* Glass in the palette's own surface, like the icon tiles. Hardcoding a
+     dark pane here made the widgets ignore light mode while everything
+     around them followed it. */
+  background: color-mix(in oklch, var(--surface) 88%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.sb-widget:active { transform: scale(0.97); }
+.sb-widget:focus-visible { outline: 2px solid var(--accent-3); outline-offset: 3px; }
+
+.sb-id-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.sb-id-role {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+}
+.sb-id-line {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.sb-map-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.sb-map-count {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+.sb-map-note {
+  margin-top: auto;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* ---- app icons ----------------------------------------------------------- */
+.sb-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.15rem 0.5rem;
+}
+
+.sb-app {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fff;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.sb-app:active .sb-tile { transform: scale(0.9); }
+.sb-app:focus-visible { outline: none; }
+.sb-app:focus-visible .sb-tile { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* Tinted glass tile with a coloured glyph, rather than a saturated tile with
+   a white glyph: the accents differ per palette and some are pale, so the
+   glyph has to carry the colour and the tile has to carry the contrast. */
+.sb-tile {
+  width: 58px;
+  height: 58px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklch, var(--surface) 88%, transparent);
+  border: 0.5px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--tile, var(--accent-1));
+  transition: transform 0.12s ease;
+}
+.sb-tile svg {
+  width: 27px;
+  height: 27px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sb-label {
+  font-size: 0.72rem;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+/* ---- dock ---------------------------------------------------------------- */
+.sb-dock {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 0.7rem 0.5rem;
+  border-radius: 26px;
+  border: 0.5px solid var(--rule);
+  background: color-mix(in oklch, var(--surface) 58%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+.sb-dock .sb-label { display: none; }
+
+/* ==========================================================================
+   Open applications
+   ========================================================================== */
+
+/* A window is only on screen while it is the open app. Driving this from a
+   class rather than from [hidden] alone means the home screen is what paints
+   first — the browser window never flashes before springboard.js hides it. */
+html.is-phone .window { display: none; }
+html.is-phone .window.ph-open { display: flex; }
+
+/* 100dvh, not 100vh: on iPhone Safari 100vh is measured with the toolbars
+   retracted, and these windows never scroll the page, so the toolbars stay
+   out and the last 80-odd pixels sit behind them. */
+html.is-phone .browser,
+html.is-phone .app-window,
+html.is-phone #resume-app {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-height: none;
+  transform: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  z-index: 60;
+}
+
+/* The phone title bar, built by springboard.js. Sits above the viewport in
+   the window's own flex column, so nothing has to be absolutely placed. */
+.ph-bar {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: calc(env(safe-area-inset-top) + 46px);
+  padding: env(safe-area-inset-top) 0.6rem 0;
+  background: color-mix(in oklch, var(--surface) 86%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 0.5px solid var(--rule);
+}
+/* Centred in the bar, not next to the back control: a title that shifts with
+   the length of the word beside it reads as a different bar on every screen. */
+.ph-title {
+  position: absolute;
+  left: 50%;
+  top: env(safe-area-inset-top);
+  bottom: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ph-back {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 44px;
+  padding: 0.35rem 0.4rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--accent-1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ph-back svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Over a live map the bar floats, the way Maps keeps its controls over the
+   cartography instead of above it. */
+.ph-bar.is-float {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 7;
+  height: auto;
+  padding: calc(env(safe-area-inset-top) + 0.5rem) 0.6rem 0.5rem;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+}
+.ph-bar.is-float .ph-back {
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem 0.4rem 0.55rem;
+  background: color-mix(in oklch, var(--surface) 86%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+}
+.ph-bar.is-float .ph-title { display: none; }
+
+/* The home indicator. A real iPhone swipes up from here; a tap does the same
+   job and is discoverable, and the back control above covers the gesture. */
+.ph-home {
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  width: 40%;
+  min-width: 9rem;
+  min-height: 44px;
+  padding: 0.9rem 0 calc(env(safe-area-inset-bottom) + 0.5rem);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ph-home::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--fg);
+  opacity: 0.38;
+}
+.ph-home:active::after { opacity: 0.7; }
+
+/* ---- reading a section on a phone --------------------------------------- */
+html.is-phone .viewport {
+  padding: 1.25rem 1.15rem calc(env(safe-area-inset-bottom) + 3rem);
+}
+html.is-phone .panel.active { animation: none; }
+/* iOS puts a small title in the bar and a large one at the top of the content,
+   which is exactly the pair this build has. So the section heading becomes
+   that large title: styles.css draws it as an uppercase label with a gradient
+   rule, which is section furniture for a desktop page and reads as a second,
+   shoutier copy of the bar title on a phone. */
+html.is-phone .panel > h2 {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin: 0 0 0.35rem;
+}
+html.is-phone .panel > h2::before { content: none; }
+html.is-phone .lede { font-size: 1rem; }
+html.is-phone .hero { padding: 0.5rem 0 2rem; }
+html.is-phone footer { padding-top: 2rem; }
+
+/* Cards stop being a grid of tiles and become a single column of stories —
+   there is only ever one column of attention on a phone. */
+html.is-phone .grid { grid-template-columns: 1fr; gap: 0.9rem; }
+html.is-phone .card { border-radius: 16px; }
+html.is-phone .card-inner { padding: 1.1rem; }
+
+/* Skills read as iOS grouped lists: a quiet heading over one inset panel. */
+html.is-phone .skill-groups { grid-template-columns: 1fr; gap: 1.35rem; }
+html.is-phone .skill-group h3 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+html.is-phone .chips {
+  padding: 0.55rem;
+  border-radius: 14px;
+  background: var(--card);
+  border: 0.5px solid var(--rule);
+}
+
+/* Contact rows become full-width list rows with a large tap target. */
+html.is-phone .find {
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--card);
+  border: 0.5px solid var(--rule);
+}
+html.is-phone .find a {
+  padding: 0.85rem 1rem;
+  min-height: 3.1rem;
+  border-bottom: 0.5px solid var(--rule);
+}
+html.is-phone .find li:last-child a { border-bottom: 0; }
+html.is-phone .find a:hover { transform: none; }
+
+/* The contact header springboard.js builds above those rows. */
+.ph-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 1.5rem;
+}
+.ph-card-mono {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--accent-1);
+  background: var(--card);
+  border: 0.5px solid var(--rule);
+}
+.ph-card-name { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+.ph-card-role { font-size: 0.9rem; color: var(--muted); }
+
+html.is-phone .links { gap: 0.6rem; }
+html.is-phone .btn { padding: 0.7rem 1.1rem; }
+
+/* ==========================================================================
+   The Map application
+   ========================================================================== */
+
+/* Apple Maps has no zoom buttons — the gestures are the controls. The
+   attribution stays: OpenFreeMap and OSM require it. */
+html.is-phone .app-window .maplibregl-ctrl-top-right { display: none; }
+
+/* The sheet's own heading carries the photo count; the floating pill would be
+   the same number twice. */
+html.is-phone .app-count { display: none; }
+
+/* Attribution is a condition of using OpenFreeMap and OSM data, so it has to
+   clear the closed sheet rather than sit behind it. */
+html.is-phone .app-window .maplibregl-ctrl-bottom-right,
+html.is-phone .app-window .maplibregl-ctrl-bottom-left {
+  bottom: 13.2rem;
+}
+
+/* The photo sheet, built in photo-map.js. It exists in the DOM on every
+   screen size and is shown only here, so nothing has to be created or torn
+   down when a phone rotates into landscape and back. */
+.pm-sheet { display: none; }
+html.is-phone .pm-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  height: 76%;
+  border-radius: 16px 16px 0 0;
+  background: color-mix(in oklch, var(--surface) 92%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-top: 0.5px solid var(--rule);
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25);
+  transform: translateY(var(--sheet-y, calc(100% - 13.5rem)));
+  transition: transform 0.3s cubic-bezier(0.22, 0.8, 0.2, 1);
+  touch-action: none;
+}
+html.is-phone .pm-sheet.is-up { --sheet-y: 0px; }
+html.is-phone .pm-sheet.is-dragging { transition: none; }
+
+.pm-sheet-grab {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  flex: none;
+  padding: 0.4rem 0;
+  cursor: grab;
+  -webkit-tap-highlight-color: transparent;
+}
+.pm-sheet-grab::after {
+  content: "";
+  display: block;
+  width: 2.3rem;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: var(--fg);
+  opacity: 0.25;
+}
+/* A plain sheet title. Section headings elsewhere carry a rule and small
+   caps from styles.css, which is section furniture — wrong inside a sheet. */
+.pm-sheet-head {
+  flex: none;
+  margin: 0;
+  padding: 0 1rem 0.6rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--fg);
+}
+.pm-sheet-head::before,
+.pm-sheet-head::after { content: none; }
+.pm-sheet-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  touch-action: pan-y;
+}
+.pm-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: 0;
+  border-top: 0.5px solid var(--rule);
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pm-sheet-row:active { background: var(--hover-tint); }
+.pm-sheet-row img {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex: none;
+  background: var(--card);
+}
+.pm-sheet-title { display: block; font-size: 0.95rem; font-weight: 600; }
+.pm-sheet-place { display: block; font-size: 0.82rem; color: var(--muted); }
+
+/* The contact card replaces the section heading: the title bar above it
+   already says Contact, and two headings in a row read as a mistake. */
+html.is-phone #panel-contact > h2 { display: none; }
+html.is-phone #panel-contact > .lede { text-align: center; }
+
+/* ==========================================================================
+   Appearance settings — a sheet from the bottom, not a desktop popover
+   ========================================================================== */
+html.is-phone .theme-panel {
+  top: auto;
+  right: 0.5rem;
+  left: 0.5rem;
+  bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  width: auto;
+  max-height: 70dvh;
+  overflow-y: auto;
+  border-radius: 20px;
+  z-index: 90;
+}
+
+html.is-phone .pm-box {
+  padding-top: calc(env(safe-area-inset-top) + 3rem);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 3.5rem);
+}
+
+/* The resume modal is reachable on a phone through a #resume link, and a
+   desktop dialog inset by 2rem with a 90vh box is not a phone screen. */
+html.is-phone .modal { padding: 0; }
+html.is-phone .modal-box {
+  width: 100%;
+  height: 100dvh;
+  border: 0;
+  border-radius: 0;
+}
+
+/* ==========================================================================
+   A phone on its side
+   ========================================================================== */
+/* Landscape leaves about 390px of height, and the widgets plus the icon grid
+   are taller than that — which pushes the dock off the bottom of a screen
+   that is not supposed to scroll. Everything shrinks a step instead. Placed
+   last so it outranks the sizes set above it. */
+@media (max-height: 520px) {
+  html.is-phone .sb-screen { gap: 0.7rem; }
+  html.is-phone .sb-widget { min-height: 5.5rem; }
+  html.is-phone .sb-id-line { display: none; }
+  html.is-phone .sb-grid { gap: 0.7rem 0.5rem; }
+  html.is-phone .sb-tile { width: 46px; height: 46px; border-radius: 12px; }
+  html.is-phone .sb-tile svg { width: 22px; height: 22px; }
+  html.is-phone .sb-dock { padding: 0.45rem 0.5rem; }
+}
+
+/* ==========================================================================
+   Motion
+   ========================================================================== */
+.ph-anim {
+  transition: transform 0.34s cubic-bezier(0.22, 0.8, 0.2, 1),
+              opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-anim { transition: none; }
+  html.is-phone .pm-sheet { transition: none; }
+  .sb-tile { transition: none; }
+}

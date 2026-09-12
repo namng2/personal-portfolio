@@ -411,7 +411,12 @@ function particleColor(alpha) {
   const MIN_W = 420;
   const MIN_H = 320;
   const EDGE = 8; // breathing room against the viewport
-  const compact = () => window.matchMedia("(max-width: 640px)").matches;
+  // Phone-shaped, not merely narrow. This is the same test boot-theme.js uses
+  // to stamp .is-phone, so a phone in landscape — wide, but 390px tall — is
+  // not handed the desktop's auto-opened windows and flight animations.
+  const compact = () =>
+    document.documentElement.classList.contains("is-phone") ||
+    window.matchMedia("(max-width: 640px)").matches;
   const topLimit = () =>
     parseInt(getComputedStyle(document.documentElement).getPropertyValue("--menubar-h"), 10) || 0;
 
@@ -584,7 +589,11 @@ function particleColor(alpha) {
   }
 
   wins.forEach(build);
-  raise(wins[wins.length - 1]);
+  // The browser is the front application at load. Raising whichever window
+  // happens to be last in the markup named the Resume app ("Preview") in the
+  // menu bar on phones, where the auto-open block below never runs to correct
+  // it.
+  raise(document.querySelector(".browser") || wins[wins.length - 1]);
 
   // ---- opening and closing app windows -------------------------------------
   const everOpened = new Set();
@@ -596,6 +605,14 @@ function particleColor(alpha) {
     // Window > Open Map — should just bring it forward, not collapse it to
     // dock size and expand it again.
     const wasHidden = win.hidden;
+    // Frames inside a window load on first open rather than at page load, so a
+    // window nobody opens costs nothing. The Resume PDF is the one that
+    // matters: phones never open that window at all.
+    const frame = win.querySelector("iframe[data-src]");
+    if (frame) {
+      frame.src = frame.dataset.src;
+      frame.removeAttribute("data-src");
+    }
     win.hidden = false;
     // Only the very first open is centred. Keying this off `hidden` would
     // re-centre on every reopen, throwing away wherever the window had been

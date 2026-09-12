@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- viewport-fit=cover lets the phone build paint under the notch and the
+       home indicator; every edge inside it pads itself back out with
+       env(safe-area-inset-*). -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <!-- Defence in depth: even if markup were ever injected, scripts may only run
        from this origin and the pinned GSAP CDN. 'unsafe-inline' is needed for
        style= attributes only; no inline <script> exists, so scripts stay strict.
@@ -41,16 +44,30 @@
   <meta property="og:url" content="https://namng2.github.io/personal-portfolio/" />
   <meta name="twitter:card" content="summary" />
   <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <!-- Added to an iPhone's home screen, the site launches with no Safari
+       chrome at all, which is the point of the phone build: the pretend
+       iPhone stops sharing the screen with a real browser. black-translucent
+       puts the page under the status bar, and viewport-fit=cover plus the
+       safe-area padding inside keep content clear of it. -->
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Nam.dev" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.css"
         integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="assets/css/themes.css?v=4" />
   <link rel="stylesheet" href="assets/css/styles.css?v=37" />
+  <!-- The phone build. Last, and on purpose: everything in it overrides
+       styles.css, and source order is what decides between rules of equal
+       specificity — the trap that has broken the phone layout three times. -->
+  <link rel="stylesheet" href="assets/css/mobile.css?v=1" />
   <!-- Render-blocking on purpose: stamps the saved theme onto <html> before
        first paint, so the page never flashes the default palette first. It
        has to be a file, not inline, because the CSP above forbids inline
        scripts. Keep it tiny. -->
-  <script src="assets/js/boot-theme.js?v=2"></script>
+  <script src="assets/js/boot-theme.js?v=3"></script>
 </head>
 <body>
   <!-- macOS-style menu bar -->
@@ -513,7 +530,11 @@
            viewer and cannot be styled from here. Chromium ignores toolbar=0
            and navpanes=0 (they are Acrobat's parameters); Safari and Firefox
            honour some, so they are worth sending. -->
-      <iframe class="pdf-frame" src="assets/resume/resume.pdf#toolbar=0&amp;navpanes=0&amp;view=FitH"
+      <!-- data-src, not src: the window manager sets it the first time this
+           window is opened. A phone never opens it — the Resume icon there
+           hands the file to iOS's own viewer — and 126 KB of PDF should not
+           be downloaded by a visitor who will never see this frame. -->
+      <iframe class="pdf-frame" data-src="assets/resume/resume.pdf#toolbar=0&amp;navpanes=0&amp;view=FitH"
               title="Nam Nguyen — resume (PDF)" loading="lazy"></iframe>
     </div>
     <div class="resize-handle" data-corner="nw" aria-hidden="true"></div>
@@ -561,6 +582,120 @@
     </div>
   </div>
 
+  <!-- ======================================================================
+       Phone home screen. The desktop is a Mac; a handset is an iPhone. Shown
+       only when <html> carries .is-phone — on a desktop this whole block is
+       display:none and costs a visitor nothing but its markup.
+
+       The sections are not repeated here: an icon opens the browser window on
+       that panel, so About is written once and read by both builds.
+
+       Must stay above the <script> tags — springboard.js binds to it, and
+       markup that arrives after its script has cost this project a dead
+       feature twice.
+       ====================================================================== -->
+  <div id="springboard" role="group" aria-label="Home screen">
+    <div class="sb-screen">
+      <div class="sb-widgets">
+        <button type="button" class="sb-widget sb-id" data-sb-app="about">
+          <span class="sb-id-name">Nam Nguyen</span>
+          <span class="sb-id-role">Software engineer</span>
+          <span class="sb-id-line">Full-stack products, AI tools, and real-time vision systems.</span>
+        </button>
+        <button type="button" class="sb-widget sb-map" data-sb-app="map">
+          <span class="sb-map-label">Photo map</span>
+          <span class="sb-map-count" data-pm-count></span>
+          <span class="sb-map-note">This wallpaper is one of them.</span>
+        </button>
+      </div>
+
+      <div class="sb-grid" role="group" aria-label="Apps">
+        <button type="button" class="sb-app" data-sb-app="about">
+          <span class="sb-tile" style="--tile: var(--accent-1)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="8" r="3.4"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/>
+            </svg>
+          </span>
+          <span class="sb-label">About</span>
+        </button>
+        <button type="button" class="sb-app" data-sb-app="projects">
+          <span class="sb-tile" style="--tile: var(--accent-2)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/>
+              <rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>
+            </svg>
+          </span>
+          <span class="sb-label">Projects</span>
+        </button>
+        <button type="button" class="sb-app" data-sb-app="skills">
+          <span class="sb-tile" style="--tile: var(--accent-3)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 7 4 12l5 5M15 7l5 5-5 5"/>
+            </svg>
+          </span>
+          <span class="sb-label">Skills</span>
+        </button>
+        <button type="button" class="sb-app" data-sb-app="contact">
+          <span class="sb-tile" style="--tile: var(--accent-1)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2.2"/>
+              <path d="M5.9 16.3a3.5 3.5 0 0 1 6.2 0M15 10h3.4M15 13.6h3.4"/>
+            </svg>
+          </span>
+          <span class="sb-label">Contact</span>
+        </button>
+        <button type="button" class="sb-app" data-sb-app="settings">
+          <span class="sb-tile" style="--tile: var(--muted)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M3 7h5M12.2 7H21M3 15h9.2M16.4 15H21"/>
+              <circle cx="10.1" cy="7" r="2.2"/><circle cx="14.3" cy="15" r="2.2"/>
+            </svg>
+          </span>
+          <span class="sb-label">Appearance</span>
+        </button>
+      </div>
+
+      <nav class="sb-dock" aria-label="Dock">
+        <button type="button" class="sb-app" data-sb-app="map" aria-label="Map">
+          <span class="sb-tile" style="--tile: var(--accent-2)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>
+            </svg>
+          </span>
+          <span class="sb-label">Map</span>
+        </button>
+        <!-- The real PDF, opened by the phone's own viewer: an iframe is
+             unreliable on iOS, and the native one pinches, zooms and shares. -->
+        <a class="sb-app" href="assets/resume/resume.pdf" target="_blank" rel="noopener" aria-label="Resume">
+          <span class="sb-tile" style="--tile: var(--accent-3)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M14 3.5H7.5A1.5 1.5 0 0 0 6 5v14a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 19V7.5z"/>
+              <path d="M14 3.5V7a.5.5 0 0 0 .5.5H18M9 12h6M9 15.5h6"/>
+            </svg>
+          </span>
+          <span class="sb-label">Resume</span>
+        </a>
+        <a class="sb-app" href="mailto:namhnguyen041@gmail.com" aria-label="Email">
+          <span class="sb-tile" style="--tile: var(--accent-1)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M4.2 7.6 12 13l7.8-5.4"/>
+            </svg>
+          </span>
+          <span class="sb-label">Email</span>
+        </a>
+        <a class="sb-app" href="https://github.com/namng2" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+          <span class="sb-tile" style="--tile: var(--fg)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="7" cy="6" r="2.4"/><circle cx="7" cy="18" r="2.4"/><circle cx="17" cy="9" r="2.4"/>
+              <path d="M7 8.4v7.2M17 11.4c0 3.1-2.7 4.1-5 4.3"/>
+            </svg>
+          </span>
+          <span class="sb-label">GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+
   <!-- Subresource Integrity: if the CDN ever serves altered bytes, the browser
        refuses to run them instead of executing whatever it received. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
@@ -573,9 +708,11 @@
           integrity="sha512-hoXlvOdSmh58mppUyZHZsscHkR/yXl6zLpTMTNwA6IZ61DpeaCNjosRu1WJ2DeIpkfW5MsJJ9H89zjV4IBGqRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="assets/js/theme.js?v=5"></script>
-  <script src="assets/js/photo-map.js?v=27"></script>
-  <script src="assets/js/script.js?v=20"></script>
+  <script src="assets/js/photo-map.js?v=28"></script>
+  <script src="assets/js/script.js?v=21"></script>
   <script src="assets/js/resume.js?v=7"></script>
+  <!-- Last: it calls __activateTab, which script.js above defines. -->
+  <script src="assets/js/springboard.js?v=1"></script>
 
 </body>
 </html>
