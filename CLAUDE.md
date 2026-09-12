@@ -265,6 +265,14 @@ hiccup, a content blocker, a bad SRI) shipped visitors a dead map *and* a
 live-looking "Add a photo…" button. A security-shaped behaviour must never be
 downstream of a feature working.
 
+**The mirror image of that trap has now bitten too.** `if (!IS_LOCAL) return`
+sits above the composer's wiring, so *anything* written below it runs on
+localhost and never on the deployed site. The startup `load()` went in at the
+bottom of the module and shipped a live site with a blank photo count and an
+empty photo sheet while every local test passed. To run the deployed code path
+locally, open the site by the Mac's LAN address — `http://<LAN IP>:5500` —
+where `IS_LOCAL` is false because the host is neither localhost nor `.local`.
+
 - **Verify a tile provider by looking at the pixels, not the status code.**
   CARTO's basemaps were the first choice and returned HTTP 200 `image/png` —
   the PNG was an "API KEY REQUIRED" watermark.

@@ -510,6 +510,19 @@
 
   if (!win.hidden) build();
 
+  // ---- startup -------------------------------------------------------------
+  // The manifest is fetched now rather than when the Map window first opens:
+  // the photo count appears in the Map section, the window's own pill and the
+  // phone home screen's widget long before anyone opens the map, and the
+  // phone's photo sheet is built from the same data. render() hangs markers
+  // only if there is a map to hang them on.
+  //
+  // This MUST stay above the `if (!IS_LOCAL) return` below. Sitting at the
+  // bottom of the module, it ran on localhost and never on the deployed site,
+  // where that guard returns first — so the live site showed no photo count
+  // and an empty photo sheet while every local test passed.
+  load();
+
   // ---- composer -----------------------------------------------------------
   // Author-only. Nothing here could ever publish for a visitor — the composer
   // just prints JSON on screen, and a static host has no endpoint to write to
@@ -717,11 +730,4 @@
     return result.lat == null && !result.date ? null : result;
   }
 
-  // ---- startup -------------------------------------------------------------
-  // The manifest is fetched now rather than when the Map window first opens.
-  // The photo count is shown in three places that are visible long before the
-  // map is — the Map section, the window's own pill, and the phone home
-  // screen's widget — and the phone's photo sheet is built from the same data.
-  // render() hangs markers only if there is a map to hang them on.
-  load();
 })();
