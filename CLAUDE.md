@@ -200,6 +200,16 @@ Things that matter when editing it:
   photo-map.js repeats the sheet's closed offset from mobile.css — keep the
   two in step.
 
+- **Icon tiles pin their lightness, not their colour.** Each tile takes hue
+  and chroma from the palette (`--tile`, usually an accent) but a fixed oklch
+  lightness — 0.66 at the top, 0.46 at the bottom — through relative colour
+  syntax, so a white glyph keeps its contrast whether a palette's accents are
+  pastels or deep inks. Change those numbers only after measuring the glyph
+  against the tile on every palette in both modes. The first version was glass
+  tiles with a thin accent glyph, and they vanished into the wallpaper. Neutral
+  apps use the fixed `.is-graphite` and `.is-ink` tiles instead, because
+  `--fg` and `--muted` flip between near-white and near-black with the mode.
+
 **Verifying it here has one blind spot**: the agent's browser pane only
 emulates touch below 768px, so the landscape clause cannot match at 844x390 in
 the pane. Test it at 740x390, or on a real handset:

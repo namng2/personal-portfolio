@@ -62,7 +62,7 @@
   <!-- The phone build. Last, and on purpose: everything in it overrides
        styles.css, and source order is what decides between rules of equal
        specificity — the trap that has broken the phone layout three times. -->
-  <link rel="stylesheet" href="assets/css/mobile.css?v=1" />
+  <link rel="stylesheet" href="assets/css/mobile.css?v=2" />
   <!-- Render-blocking on purpose: stamps the saved theme onto <html> before
        first paint, so the page never flashes the default palette first. It
        has to be a file, not inline, because the CSP above forbids inline
@@ -636,7 +636,7 @@
           <span class="sb-label">Skills</span>
         </button>
         <button type="button" class="sb-app" data-sb-app="contact">
-          <span class="sb-tile" style="--tile: var(--accent-1)">
+          <span class="sb-tile" style="--tile: color-mix(in oklch, var(--accent-2), var(--accent-3))">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2.2"/>
               <path d="M5.9 16.3a3.5 3.5 0 0 1 6.2 0M15 10h3.4M15 13.6h3.4"/>
@@ -645,7 +645,7 @@
           <span class="sb-label">Contact</span>
         </button>
         <button type="button" class="sb-app" data-sb-app="settings">
-          <span class="sb-tile" style="--tile: var(--muted)">
+          <span class="sb-tile is-graphite">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M3 7h5M12.2 7H21M3 15h9.2M16.4 15H21"/>
               <circle cx="10.1" cy="7" r="2.2"/><circle cx="14.3" cy="15" r="2.2"/>
@@ -657,7 +657,7 @@
 
       <nav class="sb-dock" aria-label="Dock">
         <button type="button" class="sb-app" data-sb-app="map" aria-label="Map">
-          <span class="sb-tile" style="--tile: var(--accent-2)">
+          <span class="sb-tile" style="--tile: var(--accent-3)">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>
             </svg>
@@ -667,7 +667,7 @@
         <!-- The real PDF, opened by the phone's own viewer: an iframe is
              unreliable on iOS, and the native one pinches, zooms and shares. -->
         <a class="sb-app" href="assets/resume/resume.pdf" target="_blank" rel="noopener" aria-label="Resume">
-          <span class="sb-tile" style="--tile: var(--accent-3)">
+          <span class="sb-tile" style="--tile: var(--accent-2)">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M14 3.5H7.5A1.5 1.5 0 0 0 6 5v14a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 19V7.5z"/>
               <path d="M14 3.5V7a.5.5 0 0 0 .5.5H18M9 12h6M9 15.5h6"/>
@@ -684,7 +684,7 @@
           <span class="sb-label">Email</span>
         </a>
         <a class="sb-app" href="https://github.com/namng2" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-          <span class="sb-tile" style="--tile: var(--fg)">
+          <span class="sb-tile is-ink">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <circle cx="7" cy="6" r="2.4"/><circle cx="7" cy="18" r="2.4"/><circle cx="17" cy="9" r="2.4"/>
               <path d="M7 8.4v7.2M17 11.4c0 3.1-2.7 4.1-5 4.3"/>

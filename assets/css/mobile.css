@@ -120,7 +120,7 @@ html.is-phone #springboard::before {
   /* Glass in the palette's own surface, like the icon tiles. Hardcoding a
      dark pane here made the widgets ignore light mode while everything
      around them followed it. */
-  background: color-mix(in oklch, var(--surface) 88%, transparent);
+  background-color: color-mix(in oklch, var(--surface) 88%, transparent);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   color: var(--fg);
@@ -185,33 +185,58 @@ html.is-phone #springboard::before {
   text-decoration: none;
   cursor: pointer;
 }
-.sb-app:active .sb-tile { transform: scale(0.9); }
+.sb-app:active .sb-tile { transform: scale(0.92); filter: brightness(0.85); }
 .sb-app:focus-visible { outline: none; }
 .sb-app:focus-visible .sb-tile { outline: 2px solid #fff; outline-offset: 3px; }
 
-/* Tinted glass tile with a coloured glyph, rather than a saturated tile with
-   a white glyph: the accents differ per palette and some are pale, so the
-   glyph has to carry the colour and the tile has to carry the contrast. */
+/* Solid, lit tiles with white glyphs — the way a real home screen reads from
+   arm's length. The first version was tinted glass with a thin coloured
+   stroke: tasteful up close, and it vanished into the photograph.
+
+   Each tile keeps a palette colour but pins its lightness in oklch, 0.66 at
+   the top to 0.46 at the bottom, so a white glyph keeps its contrast whether
+   the palette's accents are pale pastels or deep inks. Hue and chroma stay the
+   palette's, so Appearance still recolours the home screen. Browsers without
+   relative colour syntax (Safari before 18) get a darkened mix instead. */
 .sb-tile {
-  width: 58px;
-  height: 58px;
-  border-radius: 15px;
+  --tile-top: color-mix(in oklch, var(--tile, var(--accent-1)) 66%, black);
+  --tile-bottom: color-mix(in oklch, var(--tile, var(--accent-1)) 42%, black);
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
-  background: color-mix(in oklch, var(--surface) 88%, transparent);
-  border: 0.5px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  color: var(--tile, var(--accent-1));
-  transition: transform 0.12s ease;
+  background-color: var(--tile-bottom);
+  background-image: linear-gradient(180deg, var(--tile-top), var(--tile-bottom));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 6px 16px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+@supports (color: oklch(from red l c h)) {
+  .sb-tile {
+    --tile-top: oklch(from var(--tile, var(--accent-1)) 0.66 calc(c * 1.35) h);
+    --tile-bottom: oklch(from var(--tile, var(--accent-1)) 0.46 calc(c * 1.35) h);
+  }
+}
+/* Neutral tiles use a fixed grey. A palette's foreground flips between near
+   white and near black with the mode, and either end sinks a white glyph. */
+.sb-tile.is-graphite {
+  --tile-top: oklch(0.66 0.012 260);
+  --tile-bottom: oklch(0.46 0.012 260);
+}
+.sb-tile.is-ink {
+  --tile-top: oklch(0.36 0.008 260);
+  --tile-bottom: oklch(0.2 0.008 260);
 }
 .sb-tile svg {
-  width: 27px;
-  height: 27px;
+  width: 30px;
+  height: 30px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.7;
+  stroke-width: 2.1;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -232,7 +257,7 @@ html.is-phone #springboard::before {
   padding: 0.7rem 0.5rem;
   border-radius: 26px;
   border: 0.5px solid var(--rule);
-  background: color-mix(in oklch, var(--surface) 58%, transparent);
+  background-color: color-mix(in oklch, var(--surface) 58%, transparent);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
@@ -278,7 +303,7 @@ html.is-phone #resume-app {
   gap: 0.5rem;
   height: calc(env(safe-area-inset-top) + 46px);
   padding: env(safe-area-inset-top) 0.6rem 0;
-  background: color-mix(in oklch, var(--surface) 86%, transparent);
+  background-color: color-mix(in oklch, var(--surface) 86%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 0.5px solid var(--rule);
@@ -339,7 +364,7 @@ html.is-phone #resume-app {
 .ph-bar.is-float .ph-back {
   border-radius: 999px;
   padding: 0.4rem 0.8rem 0.4rem 0.55rem;
-  background: color-mix(in oklch, var(--surface) 86%, transparent);
+  background-color: color-mix(in oklch, var(--surface) 86%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
@@ -373,7 +398,7 @@ html.is-phone #resume-app {
   width: 100%;
   height: 5px;
   border-radius: 999px;
-  background: var(--fg);
+  background-color: var(--fg);
   opacity: 0.38;
 }
 .ph-home:active::after { opacity: 0.7; }
@@ -420,7 +445,7 @@ html.is-phone .skill-group h3 {
 html.is-phone .chips {
   padding: 0.55rem;
   border-radius: 14px;
-  background: var(--card);
+  background-color: var(--card);
   border: 0.5px solid var(--rule);
 }
 
@@ -428,7 +453,7 @@ html.is-phone .chips {
 html.is-phone .find {
   border-radius: 14px;
   overflow: hidden;
-  background: var(--card);
+  background-color: var(--card);
   border: 0.5px solid var(--rule);
 }
 html.is-phone .find a {
@@ -457,7 +482,7 @@ html.is-phone .find a:hover { transform: none; }
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--accent-1);
-  background: var(--card);
+  background-color: var(--card);
   border: 0.5px solid var(--rule);
 }
 .ph-card-name { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
@@ -499,7 +524,7 @@ html.is-phone .pm-sheet {
   flex-direction: column;
   height: 76%;
   border-radius: 16px 16px 0 0;
-  background: color-mix(in oklch, var(--surface) 92%, transparent);
+  background-color: color-mix(in oklch, var(--surface) 92%, transparent);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   border-top: 0.5px solid var(--rule);
@@ -533,7 +558,7 @@ html.is-phone .pm-sheet.is-dragging { transition: none; }
   height: 5px;
   margin: 0 auto;
   border-radius: 999px;
-  background: var(--fg);
+  background-color: var(--fg);
   opacity: 0.25;
 }
 /* A plain sheet title. Section headings elsewhere carry a rule and small
@@ -579,7 +604,7 @@ html.is-phone .pm-sheet.is-dragging { transition: none; }
   border-radius: 10px;
   object-fit: cover;
   flex: none;
-  background: var(--card);
+  background-color: var(--card);
 }
 .pm-sheet-title { display: block; font-size: 0.95rem; font-weight: 600; }
 .pm-sheet-place { display: block; font-size: 0.82rem; color: var(--muted); }
@@ -631,8 +656,8 @@ html.is-phone .modal-box {
   html.is-phone .sb-widget { min-height: 5.5rem; }
   html.is-phone .sb-id-line { display: none; }
   html.is-phone .sb-grid { gap: 0.7rem 0.5rem; }
-  html.is-phone .sb-tile { width: 46px; height: 46px; border-radius: 12px; }
-  html.is-phone .sb-tile svg { width: 22px; height: 22px; }
+  html.is-phone .sb-tile { width: 46px; height: 46px; border-radius: 10px; }
+  html.is-phone .sb-tile svg { width: 23px; height: 23px; }
   html.is-phone .sb-dock { padding: 0.45rem 0.5rem; }
 }
 
