@@ -210,16 +210,19 @@ Things that matter when editing it:
   apps use the fixed `.is-graphite` and `.is-ink` tiles instead, because
   `--fg` and `--muted` flip between near-white and near-black with the mode.
 
-### iPhone Mirroring — the phone build on the Mac
+### The Phone window — the phone build on the Mac
 
 The `#phone-app` window frames this same page again with `?mirror=1`, inside a
-drawn iPhone. There is no second implementation: the frame is 393px wide, so
+drawn phone. There is no second implementation: the frame is 393px wide, so
 the framed copy stamps itself `.is-phone` and comes up as the home screen.
-Change the phone and the mirror changes with it.
+Change the phone and the mirror changes with it. It is called **Phone**
+everywhere a visitor can read it — the dock, the menu bar, the title bar —
+and the code says "the mirror" for the mechanism.
 
 ```
-assets/js/phone-mirror.js   fit-to-screen and focus; nothing about the phone
-styles.css  .phone-window / .phone-device / .phone-glass / .phone-island
+assets/js/phone-mirror.js   fit, zoom and focus; nothing about the phone
+styles.css  .phone-window / .phone-stage / .phone-device / .phone-glass
+            .phone-island
 mobile.css  html.is-mirror  what the drawn device has to supply itself
 ```
 
@@ -234,12 +237,25 @@ mobile.css  html.is-mirror  what the drawn device has to supply itself
   own back button. `springboard.js` checks `MIRROR` before `pushState`, and
   going home just closes the app. Nothing inside the phone build may link to a
   `#hash` for the same reason.
-- **The device is scaled, not resized.** `phone-mirror.js` sets `--s` from the
-  room below the menu bar, and the page inside keeps laying itself out at
-  393px. Resizing the frame instead would turn it into a narrow desktop, which
-  is the one thing the window exists to disprove.
-- **No resize handles and no zoom light**, and `toggleZoom()` bails on
-  `data-fixed-size`, or Window > Zoom would stretch a phone across the screen.
+- **The device is scaled, not resized.** `phone-mirror.js` sets `--s` and the
+  window's width and height are `calc()`ed from it, while the page inside
+  keeps laying itself out at 393px. Resizing the frame instead would turn it
+  into a narrow desktop, which is the one thing the window exists to disprove.
+- **Zoom grows the device; it does not maximise the window.** `toggleZoom()`
+  in script.js sees `data-fixed-size` and dispatches `zoomrequest` instead, so
+  both the green light and Window > Zoom reach phone-mirror.js. At rest the
+  phone is drawn at 82% of the room available and never above actual size;
+  zoomed it takes the lot. That 82% is what gives the light something to do —
+  before it, the phone already filled the screen and the light was dropped
+  altogether, which reads as a broken window.
+- **Nothing may grow past the menu bar or the dock.** Both are painted above
+  every window (z 500 and 400 against a window's 30-odd), so a window that
+  overruns either is not bigger, it is partly hidden. The zoomed size is
+  measured against what is left between them.
+- **The title bar is real** (`.framed`, like the Resume window), and its
+  height is pinned to `--bar` because the window's height is calculated from
+  it. The lights first floated over the bezel and faded in on hover, which
+  looked right and failed: an invisible control is a broken control.
 - **Clicks inside an iframe never reach the page around it**, so the window
   would never come to the front when used. phone-mirror.js listens for the
   page's own `blur` and re-opens the window when the frame is what took focus.

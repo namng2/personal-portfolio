@@ -90,7 +90,7 @@
 
   // The choice belongs to the origin, not to one document. "storage" fires in
   // every *other* page on it — a second tab, and the copy of this site inside
-  // the iPhone Mirroring window — so the mirror repaints the moment the Mac's
+  // the Mac's Phone window — so the mirror repaints the moment the Mac's
   // palette changes, and the Mac repaints when the palette is changed inside
   // the phone. It never fires in the document that wrote, so this cannot loop.
   window.addEventListener("storage", (e) => {

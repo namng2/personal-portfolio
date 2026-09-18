@@ -58,7 +58,7 @@
         integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="assets/css/themes.css?v=4" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=38" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=39" />
   <!-- The phone build. Last, and on purpose: everything in it overrides
        styles.css, and source order is what decides between rules of equal
        specificity — the trap that has broken the phone layout three times. -->
@@ -544,39 +544,47 @@
   </section>
 
   <!-- ======================================================================
-       iPhone Mirroring — this same page, framed in a phone.
+       Phone — this same page, framed in a phone.
 
        The screen is an <iframe> of this page with ?mirror=1: at 393px wide it
        stamps itself .is-phone and becomes the home screen, so the Mac shows
        the phone build without a line of it being written twice. Change the
-       phone and the mirror changes with it, because they are the same file.
+       phone and this window changes with it, because they are the same file.
 
        data-src, not src: the second copy of the site — GSAP, MapLibre, the
        photo manifest — is only worth downloading if this window is opened.
        The window manager fills it in on first open.
 
-       No resize handles and no zoom light. A phone is 393x852 and nothing
-       else; phone-mirror.js scales the whole device when the screen is too
-       short for it.
+       .framed, like the Resume window: a real title bar. The lights started
+       out floating over the bezel and fading in on hover, which looked like
+       the Mac's own phone window and read as three missing buttons.
+
+       data-fixed-size keeps the generic zoom from stretching a 393px screen
+       across the desktop. The zoom light still works — script.js hands the
+       request to phone-mirror.js, which grows the device instead.
        ====================================================================== -->
-  <section class="window app-window phone-window" id="phone-app"
-           aria-label="iPhone Mirroring" data-fixed-size hidden>
+  <section class="window app-window framed phone-window" id="phone-app"
+           aria-label="Phone" data-fixed-size hidden>
     <header class="app-chrome">
       <div class="window-controls">
-        <button type="button" class="dot dot-close" data-app-close aria-label="Close iPhone Mirroring" title="Close"></button>
-        <button type="button" class="dot dot-min" data-app-min aria-label="Minimise iPhone Mirroring" title="Minimise"></button>
+        <button type="button" class="dot dot-close" data-app-close aria-label="Close Phone" title="Close"></button>
+        <button type="button" class="dot dot-min" data-app-min aria-label="Minimise Phone" title="Minimise"></button>
+        <button type="button" class="dot dot-max" data-app-zoom aria-label="Zoom Phone" title="Zoom"></button>
       </div>
+      <span class="app-title">Phone <small>393 &times; 852</small></span>
     </header>
 
-    <div class="phone-device">
-      <div class="phone-glass">
-        <iframe class="phone-screen" data-src="?mirror=1"
-                title="This site as it looks on a phone" loading="lazy"></iframe>
-        <!-- Drawn over the page, like the real one. No status bar under it:
-             the phone build does not draw one either — the clock and battery
-             on a real iPhone belong to iOS — so a status bar here would be
-             showing something the phone itself never shows. -->
-        <span class="phone-island" aria-hidden="true"></span>
+    <div class="phone-stage">
+      <div class="phone-device">
+        <div class="phone-glass">
+          <iframe class="phone-screen" data-src="?mirror=1"
+                  title="This site as it looks on a phone" loading="lazy"></iframe>
+          <!-- Drawn over the page, like the real one. No status bar under it:
+               the phone build does not draw one either — the clock and battery
+               on a real handset belong to the operating system — so a status
+               bar here would show something the phone itself never shows. -->
+          <span class="phone-island" aria-hidden="true"></span>
+        </div>
       </div>
     </div>
   </section>
@@ -602,9 +610,9 @@
       <span class="dock-tip" aria-hidden="true">Resume</span>
       <span class="dock-dot" aria-hidden="true"></span>
     </button>
-    <button type="button" class="dock-item" data-dock="phone" aria-label="iPhone Mirroring">
+    <button type="button" class="dock-item" data-dock="phone" aria-label="Phone">
       <span class="dock-icon" aria-hidden="true">📱</span>
-      <span class="dock-tip" aria-hidden="true">iPhone Mirroring</span>
+      <span class="dock-tip" aria-hidden="true">Phone</span>
       <span class="dock-dot" aria-hidden="true"></span>
     </button>
   </nav>
@@ -752,11 +760,11 @@
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="assets/js/theme.js?v=6"></script>
   <script src="assets/js/photo-map.js?v=29"></script>
-  <script src="assets/js/script.js?v=22"></script>
+  <script src="assets/js/script.js?v=23"></script>
   <script src="assets/js/resume.js?v=7"></script>
   <!-- Last: it calls __activateTab, which script.js above defines. -->
   <script src="assets/js/springboard.js?v=2"></script>
-  <script src="assets/js/phone-mirror.js?v=1"></script>
+  <script src="assets/js/phone-mirror.js?v=2"></script>
 
 </body>
 </html>

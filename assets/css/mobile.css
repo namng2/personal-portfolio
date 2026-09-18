@@ -29,7 +29,7 @@ html.is-phone {
 /* The notch, the home indicator and the rounded corners, as four numbers.
    Held in variables rather than called as env() at each site because the
    phone build runs in two places: on a real handset, where the browser
-   measures them, and inside the iPhone Mirroring window on the Mac, where
+   measures them, and inside the Phone window on the Mac, where
    there is no hardware to measure and the drawn device has to supply its own
    (below). Defined on :root, not on html.is-phone, so a rule that resolves
    before the class lands still has a value to work with. */

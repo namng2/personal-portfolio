@@ -23,7 +23,7 @@
   const mapWin = document.getElementById("map-app");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const mq = window.matchMedia(window.__PHONE_MQ || "(max-width: 640px)");
-  // Inside the Mac's iPhone Mirroring window. An iframe shares the session
+  // Inside the Mac's Phone window. An iframe shares the session
   // history with the page holding it, so every icon tapped in here would
   // otherwise land on the desktop's own back button. The mirror keeps no
   // history at all: its back control is the only way out of an app, which is

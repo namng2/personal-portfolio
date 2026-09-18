@@ -440,7 +440,7 @@ function particleColor(alpha) {
   let focused = wins[0];
 
   // macOS names the frontmost application in the menu bar; so does this.
-  const APP_NAMES = { "map-app": "Map", "resume-app": "Preview", "phone-app": "iPhone Mirroring" };
+  const APP_NAMES = { "map-app": "Map", "resume-app": "Preview", "phone-app": "Phone" };
   const appNameEl = document.querySelector(".mb-app");
 
   function raise(win) {
@@ -560,9 +560,14 @@ function particleColor(alpha) {
     // ---- zoom / centre -----------------------------------------------------
     let restore = null;
     function toggleZoom() {
-      // A phone is one size. Without this, Window > Zoom on the mirror would
-      // stretch a 393px screen across the desktop.
-      if (win.dataset.fixedSize !== undefined) return;
+      // A window of a fixed shape cannot be stretched to fill the desktop —
+      // the Phone window is a 393px screen and stays one. It still has a zoom
+      // light, so hand the request to whoever owns that window and let them
+      // decide what bigger means; phone-mirror.js grows the device instead.
+      if (win.dataset.fixedSize !== undefined) {
+        win.dispatchEvent(new CustomEvent("zoomrequest"));
+        return;
+      }
       if (win.classList.contains("maximized")) {
         win.classList.remove("maximized");
         if (restore) Object.assign(win.style, restore);
@@ -1069,7 +1074,7 @@ document.querySelector('[data-nav="reload"]')?.addEventListener("click", () => {
     window: [
       { label: "Open Map", run: () => window.__openApp?.("map") },
       { label: "Open Resume PDF", run: () => window.__openApp?.("resume") },
-      { label: "Open iPhone Mirroring", run: () => window.__openApp?.("phone") },
+      { label: "Open Phone", run: () => window.__openApp?.("phone") },
       { label: "Zoom", run: () => window.__toggleZoom?.() },
       { label: "Center Window", run: () => window.__centerWindow?.() },
     ],

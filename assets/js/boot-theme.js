@@ -58,7 +58,7 @@
   }
 
   // ---- the phone mirror ----------------------------------------------------
-  // The iPhone Mirroring window frames this same page again with ?mirror=1, so
+  // The desktop's Phone window frames this same page again with ?mirror=1, so
   // the Mac can show the phone build without any of it being written twice.
   // The frame is phone-sized, so the query above would stamp .is-phone anyway;
   // saying so outright means a future change to the breakpoint cannot quietly
