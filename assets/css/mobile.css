@@ -26,6 +26,50 @@ html.is-phone {
   --menubar-h: 0px;
 }
 
+/* The notch, the home indicator and the rounded corners, as four numbers.
+   Held in variables rather than called as env() at each site because the
+   phone build runs in two places: on a real handset, where the browser
+   measures them, and inside the iPhone Mirroring window on the Mac, where
+   there is no hardware to measure and the drawn device has to supply its own
+   (below). Defined on :root, not on html.is-phone, so a rule that resolves
+   before the class lands still has a value to work with. */
+:root {
+  --sa-t: env(safe-area-inset-top);
+  --sa-r: env(safe-area-inset-right);
+  --sa-b: env(safe-area-inset-bottom);
+  --sa-l: env(safe-area-inset-left);
+}
+
+/* ---- inside the mirror --------------------------------------------------
+   An iframe is never told about the notch — env() is zero in here whatever
+   the Mac is — so the space under the drawn Dynamic Island has to be stated.
+   44px clears the pill (28px tall, 12px down) with room to breathe, and is
+   not far off the 59px iOS itself reserves. */
+html.is-mirror {
+  --sa-t: 44px;
+  --sa-b: 14px;
+}
+
+/* A phone has no visible scrollbars at rest, and a Mac's would give the
+   illusion away the moment anything scrolled. Only inside the mirror: on a
+   real phone this costs nothing, and on the desktop site the scrollbars are
+   real furniture. */
+html.is-mirror * {
+  scrollbar-width: none;
+}
+html.is-mirror *::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Belt and braces against a mirror inside the mirror: the framed copy is
+   .is-phone, so its dock and menu bar are already gone and nothing can reach
+   this window — but if anything ever did, it would frame the page a third
+   time. */
+html.is-phone #phone-app {
+  display: none;
+}
+
 html.is-phone .menubar,
 html.is-phone .dock,
 html.is-phone #bg,
@@ -86,10 +130,10 @@ html.is-phone #springboard::before {
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
-  padding: calc(env(safe-area-inset-top) + 1.15rem)
-           calc(env(safe-area-inset-right) + 1.15rem)
-           calc(env(safe-area-inset-bottom) + 0.7rem)
-           calc(env(safe-area-inset-left) + 1.15rem);
+  padding: calc(var(--sa-t) + 1.15rem)
+           calc(var(--sa-r) + 1.15rem)
+           calc(var(--sa-b) + 0.7rem)
+           calc(var(--sa-l) + 1.15rem);
   overflow-y: auto;
   color: #fff;
   /* A home screen does not select its own labels, and iOS's grey tap flash
@@ -301,8 +345,8 @@ html.is-phone #resume-app {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  height: calc(env(safe-area-inset-top) + 46px);
-  padding: env(safe-area-inset-top) 0.6rem 0;
+  height: calc(var(--sa-t) + 46px);
+  padding: var(--sa-t) 0.6rem 0;
   background-color: color-mix(in oklch, var(--surface) 86%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -313,7 +357,7 @@ html.is-phone #resume-app {
 .ph-title {
   position: absolute;
   left: 50%;
-  top: env(safe-area-inset-top);
+  top: var(--sa-t);
   bottom: 0;
   transform: translateX(-50%);
   display: flex;
@@ -355,7 +399,7 @@ html.is-phone #resume-app {
   inset: 0 0 auto 0;
   z-index: 7;
   height: auto;
-  padding: calc(env(safe-area-inset-top) + 0.5rem) 0.6rem 0.5rem;
+  padding: calc(var(--sa-t) + 0.5rem) 0.6rem 0.5rem;
   background: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -386,7 +430,7 @@ html.is-phone #resume-app {
   width: 40%;
   min-width: 9rem;
   min-height: 44px;
-  padding: 0.9rem 0 calc(env(safe-area-inset-bottom) + 0.5rem);
+  padding: 0.9rem 0 calc(var(--sa-b) + 0.5rem);
   background: none;
   border: 0;
   cursor: pointer;
@@ -405,7 +449,7 @@ html.is-phone #resume-app {
 
 /* ---- reading a section on a phone --------------------------------------- */
 html.is-phone .viewport {
-  padding: 1.25rem 1.15rem calc(env(safe-area-inset-bottom) + 3rem);
+  padding: 1.25rem 1.15rem calc(var(--sa-b) + 3rem);
 }
 html.is-phone .panel.active { animation: none; }
 /* iOS puts a small title in the bar and a large one at the top of the content,
@@ -580,7 +624,7 @@ html.is-phone .pm-sheet.is-dragging { transition: none; }
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  padding-bottom: calc(var(--sa-b) + 1rem);
   touch-action: pan-y;
 }
 .pm-sheet-row {
@@ -621,7 +665,7 @@ html.is-phone .theme-panel {
   top: auto;
   right: 0.5rem;
   left: 0.5rem;
-  bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  bottom: calc(var(--sa-b) + 0.5rem);
   width: auto;
   max-height: 70dvh;
   overflow-y: auto;
@@ -630,8 +674,8 @@ html.is-phone .theme-panel {
 }
 
 html.is-phone .pm-box {
-  padding-top: calc(env(safe-area-inset-top) + 3rem);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 3.5rem);
+  padding-top: calc(var(--sa-t) + 3rem);
+  padding-bottom: calc(var(--sa-b) + 3.5rem);
 }
 
 /* The resume modal is reachable on a phone through a #resume link, and a

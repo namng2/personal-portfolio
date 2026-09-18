@@ -1821,6 +1821,147 @@ footer {
   }
 }
 
+/* --------------------------------------------------------------------------
+   iPhone Mirroring — the phone build, running inside a drawn iPhone.
+
+   The screen is an <iframe> of this very page with ?mirror=1, not a rebuild
+   of it: whatever the phone does, the mirror does, because it is the same
+   code. Everything below draws the object around that screen.
+
+   The frame's colours are literals and stay out of themes.css on purpose,
+   for the same reason the wallpaper scrim does: a titanium phone is a
+   physical thing, and it does not turn lilac because the desktop did.
+
+   Comes after the max-width: 640px block above, which sizes .app-window to
+   the viewport — equal specificity, so source order is what keeps the phone
+   phone-shaped.
+   -------------------------------------------------------------------------- */
+.phone-window {
+  --scr-w: 393px;   /* iPhone 15 Pro, in CSS pixels */
+  --scr-h: 852px;
+  --rim: 2px;       /* the machined band around the outside */
+  --bez: 9px;       /* black glass between the band and the screen */
+  --gutter: 34px;   /* empty strip above the phone, where the lights live */
+  --s: 1;           /* phone-mirror.js shrinks this to fit a short screen */
+
+  width: calc((var(--scr-w) + 2 * (var(--rim) + var(--bez))) * var(--s));
+  height: calc((var(--scr-h) + 2 * (var(--rim) + var(--bez))) * var(--s) + var(--gutter));
+  /* The window itself is nothing but a position: the phone draws its own
+     body, its own corners and its own shadow. */
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+}
+
+/* The drag strip sits above the phone rather than over it, so it never eats a
+   tap meant for the screen. Same trick as the Map window: a title bar with no
+   title in it. */
+.phone-window .app-chrome {
+  height: var(--gutter);
+  padding-left: 0.35rem;
+}
+/* macOS keeps these hidden until you go looking for them. Keyboard focus
+   counts as looking; clicking into the phone does not. */
+.phone-window .window-controls {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.phone-window:hover .window-controls,
+.phone-window .window-controls:focus-within {
+  opacity: 1;
+}
+
+.phone-device {
+  position: absolute;
+  top: var(--gutter);
+  left: 0;
+  width: calc(var(--scr-w) + 2 * (var(--rim) + var(--bez)));
+  height: calc(var(--scr-h) + 2 * (var(--rim) + var(--bez)));
+  /* Scaled rather than resized: the page inside must keep laying itself out
+     at 393px however much room the Mac has, or it stops being a phone. */
+  transform: scale(var(--s));
+  transform-origin: 0 0;
+  padding: var(--rim);
+  border-radius: 55px;
+  /* Four buttons and a band. The buttons are background layers rather than
+     elements — they are 2.5px wide and carry no meaning, so they should not
+     cost the document four spans. */
+  background-image:
+    linear-gradient(180deg, #a39e97, #56534e),
+    linear-gradient(180deg, #a39e97, #56534e),
+    linear-gradient(180deg, #a39e97, #56534e),
+    linear-gradient(180deg, #a39e97, #56534e),
+    linear-gradient(145deg, #e4e0da 0%, #a6a199 14%, #55524d 48%, #8d8982 78%, #ded9d3 100%);
+  background-size: 2.5px 26px, 2.5px 54px, 2.5px 54px, 2.5px 88px, auto;
+  background-position: 0 116px, 0 170px, 0 234px, 100% 192px, 0 0;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 34px 70px rgba(0, 0, 0, 0.5),
+    0 10px 26px rgba(0, 0, 0, 0.38);
+}
+
+.phone-glass {
+  position: relative;
+  height: 100%;
+  padding: var(--bez);
+  border-radius: 53px;
+  background: #08080a;
+}
+
+.phone-screen {
+  display: block;
+  width: var(--scr-w);
+  height: var(--scr-h);
+  border: 0;
+  border-radius: 44px;
+  background: #000;
+}
+
+/* The Dynamic Island sits on the glass, over the page, exactly as the real
+   one sits over whatever is on screen. mobile.css pads the mirrored page down
+   past it with --sa-t. */
+.phone-island {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--bez) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  /* Smaller than the real 125x37. At full size the real proportions read as a
+     black band rather than a cutout, because the status bar that normally
+     flanks the island is not there — the phone build does not draw one, so
+     neither does the mirror, or it would be showing something the phone
+     itself never shows. */
+  width: 104px;
+  height: 28px;
+  border-radius: 999px;
+  background: #000;
+  pointer-events: none;
+}
+.phone-island::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  /* The lens: a dark ring with one cold catchlight in it. */
+  background: radial-gradient(circle at 35% 30%, #2b3550 0%, #14161d 55%, #0a0b0f 100%);
+}
+
+/* Nothing in here is a document to select, and a drag that starts on the
+   bezel should move the window, not highlight the phone. */
+.phone-device,
+.phone-glass {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* MapLibre's own chrome, retinted to the active palette. No dark-mode filter
    here — each theme loads its own cartographic style instead. */
 .maplibregl-map { font: inherit; background: var(--card); }

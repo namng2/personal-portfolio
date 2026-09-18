@@ -23,6 +23,12 @@
   const mapWin = document.getElementById("map-app");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const mq = window.matchMedia(window.__PHONE_MQ || "(max-width: 640px)");
+  // Inside the Mac's iPhone Mirroring window. An iframe shares the session
+  // history with the page holding it, so every icon tapped in here would
+  // otherwise land on the desktop's own back button. The mirror keeps no
+  // history at all: its back control is the only way out of an app, which is
+  // what it is there for.
+  const MIRROR = root.classList.contains("is-mirror");
 
   const TITLES = {
     about: "About",
@@ -119,7 +125,7 @@
     // The map measures its own container and cannot do that while hidden.
     window.dispatchEvent(new CustomEvent("windowresized"));
 
-    if (push) {
+    if (push && !MIRROR) {
       try {
         history.pushState({ sbApp: name }, "", "#" + name);
       } catch (_) {
@@ -150,6 +156,7 @@
     // on a back control — an impatient double tap — walks the history past
     // this site's own entry and leaves the page.
     if (!open) return;
+    if (MIRROR) return closeToHome();
     if (history.state && history.state.sbApp) {
       history.back();
       return;
@@ -251,8 +258,9 @@
   // dragged narrow becomes one. Both directions have to leave a coherent
   // screen behind.
   function syncMode() {
-    root.classList.toggle("is-phone", mq.matches);
-    if (mq.matches) {
+    const phone = mq.matches || MIRROR;
+    root.classList.toggle("is-phone", phone);
+    if (phone) {
       if (!open) {
         browser.hidden = true;
         browser.classList.remove("ph-open");

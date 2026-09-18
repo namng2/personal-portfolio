@@ -51,11 +51,23 @@ silently changed:
   "focus this file" call.
 - **MapLibre still loads on every phone visit** (~250 KB gzipped) even though
   the Map may never be opened. Loading it on first reveal would need the SRI
-  hash moved into JS.
+  hash moved into JS. Opening iPhone Mirroring on the Mac now pays that a
+  second time, in the frame.
+- **The particle canvas runs inside the phone build** even though `#bg` is
+  `display: none` there — a rAF loop drawing 14 dots nobody sees, on every
+  phone and again inside the mirror. One early return in `particles()` keyed
+  on `.is-phone` would end it; it needs to survive a desktop window being
+  dragged narrow and back.
 - **The wallpaper is fixed to one photograph.** Rotating it daily is a few
   lines, but each extra crop is another ~140 KB in the repo.
 - **`og:image` is still missing**, and a shared link still renders as a grey
   rectangle. Unchanged by the phone build.
+
+- **The mirror resumes where it was left.** Closing the iPhone Mirroring
+  window and reopening it shows whatever app was last open in the phone, not
+  the home screen. That matches how macOS treats a window, but the home screen
+  is the thing worth showing; sending it home on close would need springboard.js
+  to expose one call.
 
 ## Done
 

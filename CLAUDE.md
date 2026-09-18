@@ -210,11 +210,57 @@ Things that matter when editing it:
   apps use the fixed `.is-graphite` and `.is-ink` tiles instead, because
   `--fg` and `--muted` flip between near-white and near-black with the mode.
 
+### iPhone Mirroring — the phone build on the Mac
+
+The `#phone-app` window frames this same page again with `?mirror=1`, inside a
+drawn iPhone. There is no second implementation: the frame is 393px wide, so
+the framed copy stamps itself `.is-phone` and comes up as the home screen.
+Change the phone and the mirror changes with it.
+
+```
+assets/js/phone-mirror.js   fit-to-screen and focus; nothing about the phone
+styles.css  .phone-window / .phone-device / .phone-glass / .phone-island
+mobile.css  html.is-mirror  what the drawn device has to supply itself
+```
+
+- **`.is-mirror` is stamped by boot-theme.js** from `?mirror=1`, alongside
+  `.is-phone`. Everything the mirror needs to do differently hangs off it.
+- **`env(safe-area-inset-*)` is always zero in an iframe**, so mobile.css
+  reads the four insets through `--sa-t/r/b/l` and `html.is-mirror` fills them
+  in from the drawn hardware (44px under the Dynamic Island). Never put a bare
+  `env()` back into a phone rule — the mirror has no notch to measure.
+- **The mirror keeps no history.** An iframe shares the session history with
+  the page around it, so every icon tapped inside would land on the desktop's
+  own back button. `springboard.js` checks `MIRROR` before `pushState`, and
+  going home just closes the app. Nothing inside the phone build may link to a
+  `#hash` for the same reason.
+- **The device is scaled, not resized.** `phone-mirror.js` sets `--s` from the
+  room below the menu bar, and the page inside keeps laying itself out at
+  393px. Resizing the frame instead would turn it into a narrow desktop, which
+  is the one thing the window exists to disprove.
+- **No resize handles and no zoom light**, and `toggleZoom()` bails on
+  `data-fixed-size`, or Window > Zoom would stretch a phone across the screen.
+- **Clicks inside an iframe never reach the page around it**, so the window
+  would never come to the front when used. phone-mirror.js listens for the
+  page's own `blur` and re-opens the window when the frame is what took focus.
+- **The theme follows both ways.** theme.js listens for `storage`, which fires
+  in every other document on the origin — the mirror repaints when the Mac's
+  palette changes, and the Mac repaints when it is changed inside the phone.
+- **The screen is `data-src`**, filled in by the window manager on first open:
+  a second copy of the whole site is not worth downloading until it is asked
+  for.
+
 **Verifying it here has one blind spot**: the agent's browser pane only
 emulates touch below 768px, so the landscape clause cannot match at 844x390 in
 the pane. Test it at 740x390, or on a real handset:
 `python3 -m http.server 5500` already listens on every interface, so the phone
 opens `http://<the Mac's LAN IP>:5500` over the same Wi-Fi.
+
+**And a second one, for the mirror**: the pane's screenshots do not reliably
+repaint an iframe after a scripted DOM change, and its synthetic `hover` does
+not clear `:hover` once the pointer has been inside the frame. Drive the
+mirror with real clicks, and when a screenshot disagrees with the DOM, believe
+`elementFromPoint` and `getComputedStyle` over the picture.
 
 ## The photo map
 

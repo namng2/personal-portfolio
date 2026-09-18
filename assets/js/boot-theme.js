@@ -56,4 +56,19 @@
   if (window.matchMedia && window.matchMedia(PHONE_MQ).matches) {
     root.classList.add("is-phone");
   }
+
+  // ---- the phone mirror ----------------------------------------------------
+  // The iPhone Mirroring window frames this same page again with ?mirror=1, so
+  // the Mac can show the phone build without any of it being written twice.
+  // The frame is phone-sized, so the query above would stamp .is-phone anyway;
+  // saying so outright means a future change to the breakpoint cannot quietly
+  // empty the mirror.
+  //
+  // .is-mirror is what tells the phone build it is inside a drawn device
+  // rather than a real one: there is no notch for env(safe-area-inset-*) to
+  // measure, and no session history worth pushing onto — the back button
+  // belongs to the page around it.
+  if (/[?&]mirror=1(?:&|$)/.test(location.search)) {
+    root.classList.add("is-mirror", "is-phone");
+  }
 })();

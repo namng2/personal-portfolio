@@ -88,6 +88,18 @@
     if (mode === "auto") apply({ save: false });
   });
 
+  // The choice belongs to the origin, not to one document. "storage" fires in
+  // every *other* page on it — a second tab, and the copy of this site inside
+  // the iPhone Mirroring window — so the mirror repaints the moment the Mac's
+  // palette changes, and the Mac repaints when the palette is changed inside
+  // the phone. It never fires in the document that wrote, so this cannot loop.
+  window.addEventListener("storage", (e) => {
+    if (e.key !== "theme" && e.key !== "palette") return;
+    mode = stored("theme", ["auto", "light", "dark"], "auto");
+    palette = stored("palette", PALETTES, "midnight");
+    apply({ save: false });
+  });
+
   // ---- reading palette colours out of the stylesheet ---------------------
   // A detached probe carrying the palette's attributes lets getComputedStyle
   // resolve that palette's seeds without touching the live page. This is why

@@ -58,16 +58,16 @@
         integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="assets/css/themes.css?v=4" />
-  <link rel="stylesheet" href="assets/css/styles.css?v=37" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=38" />
   <!-- The phone build. Last, and on purpose: everything in it overrides
        styles.css, and source order is what decides between rules of equal
        specificity — the trap that has broken the phone layout three times. -->
-  <link rel="stylesheet" href="assets/css/mobile.css?v=2" />
+  <link rel="stylesheet" href="assets/css/mobile.css?v=3" />
   <!-- Render-blocking on purpose: stamps the saved theme onto <html> before
        first paint, so the page never flashes the default palette first. It
        has to be a file, not inline, because the CSP above forbids inline
        scripts. Keep it tiny. -->
-  <script src="assets/js/boot-theme.js?v=3"></script>
+  <script src="assets/js/boot-theme.js?v=4"></script>
 </head>
 <body>
   <!-- macOS-style menu bar -->
@@ -544,6 +544,44 @@
   </section>
 
   <!-- ======================================================================
+       iPhone Mirroring — this same page, framed in a phone.
+
+       The screen is an <iframe> of this page with ?mirror=1: at 393px wide it
+       stamps itself .is-phone and becomes the home screen, so the Mac shows
+       the phone build without a line of it being written twice. Change the
+       phone and the mirror changes with it, because they are the same file.
+
+       data-src, not src: the second copy of the site — GSAP, MapLibre, the
+       photo manifest — is only worth downloading if this window is opened.
+       The window manager fills it in on first open.
+
+       No resize handles and no zoom light. A phone is 393x852 and nothing
+       else; phone-mirror.js scales the whole device when the screen is too
+       short for it.
+       ====================================================================== -->
+  <section class="window app-window phone-window" id="phone-app"
+           aria-label="iPhone Mirroring" data-fixed-size hidden>
+    <header class="app-chrome">
+      <div class="window-controls">
+        <button type="button" class="dot dot-close" data-app-close aria-label="Close iPhone Mirroring" title="Close"></button>
+        <button type="button" class="dot dot-min" data-app-min aria-label="Minimise iPhone Mirroring" title="Minimise"></button>
+      </div>
+    </header>
+
+    <div class="phone-device">
+      <div class="phone-glass">
+        <iframe class="phone-screen" data-src="?mirror=1"
+                title="This site as it looks on a phone" loading="lazy"></iframe>
+        <!-- Drawn over the page, like the real one. No status bar under it:
+             the phone build does not draw one either — the clock and battery
+             on a real iPhone belong to iOS — so a status bar here would be
+             showing something the phone itself never shows. -->
+        <span class="phone-island" aria-hidden="true"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================================
        Dock — the taskbar. Minimising a window sends it here; clicking its
        icon brings it back. The lit dot under an icon means that window is
        on screen, so the dock doubles as the desktop's window list.
@@ -562,6 +600,11 @@
     <button type="button" class="dock-item" data-dock="resume" aria-label="Resume">
       <span class="dock-icon" aria-hidden="true">📄</span>
       <span class="dock-tip" aria-hidden="true">Resume</span>
+      <span class="dock-dot" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="dock-item" data-dock="phone" aria-label="iPhone Mirroring">
+      <span class="dock-icon" aria-hidden="true">📱</span>
+      <span class="dock-tip" aria-hidden="true">iPhone Mirroring</span>
       <span class="dock-dot" aria-hidden="true"></span>
     </button>
   </nav>
@@ -707,12 +750,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.js"
           integrity="sha512-hoXlvOdSmh58mppUyZHZsscHkR/yXl6zLpTMTNwA6IZ61DpeaCNjosRu1WJ2DeIpkfW5MsJJ9H89zjV4IBGqRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="assets/js/theme.js?v=5"></script>
+  <script src="assets/js/theme.js?v=6"></script>
   <script src="assets/js/photo-map.js?v=29"></script>
-  <script src="assets/js/script.js?v=21"></script>
+  <script src="assets/js/script.js?v=22"></script>
   <script src="assets/js/resume.js?v=7"></script>
   <!-- Last: it calls __activateTab, which script.js above defines. -->
-  <script src="assets/js/springboard.js?v=1"></script>
+  <script src="assets/js/springboard.js?v=2"></script>
+  <script src="assets/js/phone-mirror.js?v=1"></script>
 
 </body>
 </html>
